@@ -3,21 +3,23 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>WSOP TV Prototype</title>
+    <title>WSOP TV Prototype - Enhanced</title>
     
-    <!-- 1. 스타일 및 아이콘 로드 -->
+    <!-- 1. 스타일(Tailwind CSS) -->
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
+        /* 스크롤바 숨기기 & 커스텀 스타일 */
         .no-scrollbar::-webkit-scrollbar { display: none; }
         .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
-        body { background-color: #000; color: white; font-family: sans-serif; }
+        body { background-color: #000; color: white; font-family: sans-serif; -webkit-font-smoothing: antialiased; }
         
-        /* 애니메이션 효과 */
+        /* 넷플릭스 스타일 애니메이션 */
+        .item-hover:hover { transform: scale(1.05); z-index: 10; }
         @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
         .animate-in { animation: fadeIn 0.3s ease-out forwards; }
     </style>
     
-    <!-- 2. 리액트 환경 설정 (Import Map) -->
+    <!-- 2. 리액트 로딩 -->
     <script type="importmap">
     {
       "imports": {
@@ -28,7 +30,7 @@
     }
     </script>
     
-    <!-- 3. JSX 변환기 (Babel) -->
+    <!-- 3. Babel -->
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
 </head>
 <body>
@@ -38,33 +40,98 @@
     <script type="text/babel" data-type="module">
         import React, { useState, useEffect } from 'react';
         import { createRoot } from 'react-dom/client';
-        import { Play, Info, Plus, Search, Home, List, User, ChevronRight, SkipForward, X, Menu, Filter, Clock, Trophy, DollarSign, ChevronDown } from 'lucide-react';
+        import { Play, Info, Plus, Search, Home, List, User, ChevronRight, SkipForward, X, Menu, Filter, Clock, Trophy, DollarSign } from 'lucide-react';
 
-        // --- 데이터 (The Dealer 연동 시뮬레이션) ---
+        // --- 풍성한 더미 데이터 (The Dealer Pipeline Output) ---
+        
+        // 이미지 생성 유틸리티 (안정적인 이미지 로딩을 위해 Pollinations AI 활용)
+        const getImg = (prompt) => `https://image.pollinations.ai/prompt/${encodeURIComponent(prompt)}?width=800&height=450&nologo=true`;
+        const getPoster = (prompt) => `https://image.pollinations.ai/prompt/${encodeURIComponent(prompt)}?width=1280&height=720&nologo=true`;
+
         const HERO_CONTENT = {
             id: 'hero_2003',
-            title: '2003 MAIN EVENT FINAL',
-            description: 'The bluff that changed poker forever. Watch the remastered 4K version of the most iconic heads-up match in history.',
-            image: 'https://www.wsop.com/Frisco/Common/Image/2023/04/2003-main-event-final-table.jpg',
+            title: 'THE BLUFF OF THE CENTURY',
+            subtitle: 'Moneymaker vs Farha',
+            description: 'The hand that changed poker forever. Watch the remastered 4K version of the most iconic bluff in WSOP history. Chris Moneymaker puts his tournament life on the line against Sam Farha.',
+            tags: ['Classic', 'Bluff', 'Main Event', 'Remastered'],
+            image: getPoster('Chris Moneymaker poker table wsop 2003 final table chips pile dark cinematic dramatic lighting'),
+            match: '98% Match'
         };
 
-        const ARCHIVE_DATA = [
-            { id: 1, title: "The Century Bluff", players: ["Moneymaker", "Farha"], year: 2003, event: "Main Event", tags: ["Bluff", "Heads Up"], cards: ["Ks", "7h"], duration: "8m", thumbnail: "https://www.wsop.com/Frisco/Common/Image/2023/04/2003-main-event-final-table.jpg", timeline: [{ time: 10, label: "Pre-flop" }, { time: 45, label: "Check-Raise" }, { time: 120, label: "All-in" }] },
-            { id: 2, title: "Affleck's Heartbreak", players: ["Duhamel", "Affleck"], year: 2010, event: "Main Event", tags: ["Bad Beat", "All-in"], cards: ["AA", "JJ"], duration: "12m", thumbnail: "https://i.ytimg.com/vi/HeW041fN3Uo/maxresdefault.jpg", timeline: [{ time: 20, label: "4-Bet" }, { time: 60, label: "Turn All-in" }, { time: 140, label: "River 8" }] },
-            { id: 3, title: "Hellmuth Explodes", players: ["Hellmuth", "Dwan"], year: 2008, event: "Heads Up", tags: ["Meltdown", "Pro"], cards: ["AA", "TT"], duration: "15m", thumbnail: "https://i.ytimg.com/vi/V3ZpTq7Zk8A/maxresdefault.jpg", timeline: [{ time: 80, label: "Bad Beat" }, { time: 150, label: "The Rant" }] },
-            { id: 4, title: "Quad Aces vs Royal", players: ["Mabuchi", "Phillips"], year: 2008, event: "Main Event", tags: ["Cooler", "Insane"], cards: ["As", "Ah"], duration: "5m", thumbnail: "https://i.ytimg.com/vi/XunAlp2azhA/maxresdefault.jpg", timeline: [{ time: 30, label: "Flopped Quads" }, { time: 60, label: "River Royal" }] }
+        // 카테고리별 데이터
+        const CATEGORIES = [
+            {
+                id: 'cat_legendary',
+                title: "Legendary Heads-Up Battles",
+                items: [
+                    { id: 101, title: 'Hellmuth vs Dwan (2008)', duration: '12m', views: '2.1M', image: getImg('Phil Hellmuth angry poker table vs Tom Dwan WSOP dark') },
+                    { id: 102, title: 'Ivey vs Jackson', duration: '8m', views: '5.5M', image: getImg('Phil Ivey intense stare poker table chips WSOP') },
+                    { id: 103, title: 'Chan vs Seidel (1988)', duration: '15m', views: '1.2M', image: getImg('Johnny Chan poker 1988 final table retro footage style') },
+                    { id: 104, title: 'Duhamel vs Affleck', duration: '22m', views: '8.9M', image: getImg('Jonathan Duhamel Matt Affleck poker bad beat moment WSOP') },
+                ]
+            },
+            {
+                id: 'cat_highstakes',
+                title: "High Stakes Cash Games",
+                items: [
+                    { id: 201, title: 'Tom Dwan with 7-2', duration: '6m', views: '4.1M', image: getImg('Tom Dwan poker bluffing smiling piles of cash') },
+                    { id: 202, title: 'Patrik Antonius Huge Pot', duration: '10m', views: '3.2M', image: getImg('Patrik Antonius poker face high stakes poker table') },
+                    { id: 203, title: 'Doyle Brunson Wins', duration: '5m', views: '900K', image: getImg('Doyle Brunson cowboy hat poker legend winning pot') },
+                    { id: 204, title: 'Galfinakis vs Ivey', duration: '18m', views: '2.8M', image: getImg('High stakes poker table action shot chips flying') },
+                ]
+            },
+            {
+                id: 'cat_wsop2024',
+                title: "WSOP 2024 Highlights",
+                items: [
+                    { id: 301, title: 'Main Event Final Table', duration: '45m', views: '500K', image: getImg('WSOP 2024 Main Event Final Table arena lights crowd') },
+                    { id: 302, title: 'Negreanu Wins Bracelet #7', duration: '20m', views: '1.5M', image: getImg('Daniel Negreanu holding WSOP bracelet celebrating happy') },
+                    { id: 303, title: 'Ivey Deep Run', duration: '30m', views: '800K', image: getImg('Phil Ivey playing poker 2024 WSOP focused') },
+                    { id: 304, title: 'The $250k Super High Roller', duration: '55m', views: '300K', image: getImg('Poker super high roller table millions of dollars in chips') },
+                ]
+            }
         ];
 
-        const CATEGORIES = [
-            { id: 'cat1', title: "Phil Hellmuth's Meltdowns", items: [{ id: 101, title: 'VS Dwan (2008)', duration: '12m' }, { id: 102, title: 'Running it 4 Times', duration: '8m' }] },
-            { id: 'cat2', title: "Million Dollar Bluffs", items: [{ id: 105, title: 'Ivey vs Jackson', duration: '4m' }, { id: 106, title: 'Dwan with 7-2', duration: '6m' }] }
+        // 아카이브 그리드 데이터 (더 상세하게)
+        const ARCHIVE_DATA = [
+            { 
+                id: 1, title: "The Century Bluff", players: ["Moneymaker", "Farha"], year: 2003, event: "Main Event", tags: ["Bluff", "Heads Up"], cards: ["K♠", "7♥"], duration: "8m", 
+                thumbnail: getImg('Chris Moneymaker bluffing Sam Farha poker table'), 
+                timeline: [{ time: 10, label: "Pre-flop" }, { time: 45, label: "The Raise" }, { time: 120, label: "All-in Bluff" }] 
+            },
+            { 
+                id: 2, title: "The Heartbreaker", players: ["Duhamel", "Affleck"], year: 2010, event: "Main Event", tags: ["Bad Beat", "All-in"], cards: ["A♠", "A♣"], duration: "12m", 
+                thumbnail: getImg('Matt Affleck crying poker table bad beat WSOP'), 
+                timeline: [{ time: 20, label: "4-Bet Shove" }, { time: 60, label: "Turn" }, { time: 140, label: "River 8" }] 
+            },
+            { 
+                id: 3, title: "The Poker Brat", players: ["Hellmuth", "Dwan"], year: 2008, event: "Heads Up", tags: ["Meltdown", "Pro"], cards: ["A♥", "A♦"], duration: "15m", 
+                thumbnail: getImg('Phil Hellmuth shouting angry poker table'), 
+                timeline: [{ time: 80, label: "Bad Beat" }, { time: 150, label: "The Rant Begins" }] 
+            },
+            { 
+                id: 4, title: "Royal Flush", players: ["Mabuchi", "Phillips"], year: 2008, event: "Main Event", tags: ["Cooler", "Insane"], cards: ["A♠", "K♠"], duration: "5m", 
+                thumbnail: getImg('Royal flush poker hand cards on table close up'), 
+                timeline: [{ time: 30, label: "Flopped Quads" }, { time: 60, label: "River Royal" }] 
+            },
+            {
+                id: 5, title: "Quad Aces", players: ["Schwartz", "Eastgate"], year: 2009, event: "Main Event", tags: ["Quads", "Elimination"], cards: ["A♣", "A♦"], duration: "7m",
+                thumbnail: getImg('Four aces poker hand close up chips'),
+                timeline: [{ time: 20, label: "Flop" }, { time: 50, label: "Turn" }]
+            },
+             {
+                id: 6, title: "Ivey's Stare", players: ["Ivey", "Jackson"], year: 2005, event: "Monte Carlo", tags: ["Bluff", "Stare"], cards: ["Q♥", "8♥"], duration: "9m",
+                thumbnail: getImg('Phil Ivey staring down opponent poker intensity'),
+                timeline: [{ time: 40, label: "The Stare" }, { time: 90, label: "Fold" }]
+            }
         ];
 
         // --- 컴포넌트 ---
+
         const HoleCards = ({ cards }) => (
-            <div className="flex -space-x-2">
+            <div className="flex -space-x-2 shadow-lg">
                 {cards && cards.map((card, idx) => (
-                    <div key={idx} className="w-6 h-8 bg-white rounded shadow-sm border border-gray-300 flex items-center justify-center text-[10px] font-bold text-black">
+                    <div key={idx} className={`w-7 h-10 bg-white rounded-md shadow-md border border-gray-300 flex items-center justify-center text-xs font-bold ${card.includes('♥') || card.includes('♦') ? 'text-red-600' : 'text-black'}`}>
                         {card}
                     </div>
                 ))}
@@ -72,48 +139,64 @@
         );
 
         const Navbar = ({ activeTab, setActiveTab }) => (
-            <nav className="fixed bottom-0 w-full bg-black/95 border-t border-gray-800 z-50 md:top-0 md:bottom-auto md:h-16 md:border-b md:border-t-0 px-4 flex justify-around items-center md:justify-between">
-                <div className="hidden md:flex items-center gap-8">
-                    <h1 className="text-red-600 font-black text-2xl tracking-tighter cursor-pointer" onClick={()=>setActiveTab('home')}>WSOP<span className="text-white">TV</span></h1>
-                    <div className="flex gap-6 text-gray-300 text-sm font-medium">
-                        <button onClick={() => setActiveTab('home')} className={`hover:text-white ${activeTab === 'home' ? 'text-red-500' : ''}`}>Home</button>
-                        <button onClick={() => setActiveTab('vault')} className={`hover:text-white ${activeTab === 'vault' ? 'text-red-500' : ''}`}>The Vault</button>
-                        <button className="hover:text-white">Live</button>
-                        <button className="hover:text-white">Stats</button>
+            <nav className="fixed top-0 w-full bg-gradient-to-b from-black/90 to-transparent z-50 px-4 md:px-12 h-16 flex items-center justify-between transition-all duration-300 bg-black/80 backdrop-blur-sm">
+                <div className="flex items-center gap-8">
+                    <h1 className="text-red-600 font-black text-3xl tracking-tighter cursor-pointer" onClick={()=>setActiveTab('home')}>WSOP<span className="text-white">TV</span></h1>
+                    <div className="hidden md:flex gap-6 text-gray-300 text-sm font-medium">
+                        <button onClick={() => setActiveTab('home')} className={`hover:text-white transition-colors ${activeTab === 'home' ? 'text-white font-bold' : ''}`}>Home</button>
+                        <button onClick={() => setActiveTab('vault')} className={`hover:text-white transition-colors ${activeTab === 'vault' ? 'text-white font-bold' : ''}`}>The Vault</button>
+                        <button className="hover:text-white transition-colors">Live</button>
+                        <button className="hover:text-white transition-colors">Stats</button>
                     </div>
                 </div>
-                {/* 모바일 네비게이션 아이콘 */}
-                <button onClick={() => setActiveTab('home')} className="md:hidden flex flex-col items-center p-2 text-gray-400 hover:text-white">
-                    <Home size={24} color={activeTab === 'home' ? '#ED1C24' : 'currentColor'} />
-                    <span className="text-[10px] mt-1">Home</span>
-                </button>
-                <button onClick={() => setActiveTab('vault')} className="md:hidden flex flex-col items-center p-2 text-gray-400 hover:text-white">
-                    <List size={24} color={activeTab === 'vault' ? '#ED1C24' : 'currentColor'} />
-                    <span className="text-[10px] mt-1">Vault</span>
-                </button>
-                <button className="md:hidden flex flex-col items-center p-2 text-gray-400 hover:text-white">
-                    <Search size={24} />
-                    <span className="text-[10px] mt-1">Search</span>
-                </button>
-                 <div className="w-8 h-8 bg-gray-800 rounded-full flex items-center justify-center font-bold text-white text-xs border border-gray-700">ID</div>
+                <div className="flex items-center gap-4">
+                    <Search className="text-white cursor-pointer w-6 h-6" />
+                    <div className="w-8 h-8 bg-red-600 rounded-md flex items-center justify-center font-bold text-white text-xs cursor-pointer">ID</div>
+                </div>
             </nav>
         );
 
+        const MobileNav = ({ activeTab, setActiveTab }) => (
+            <div className="fixed bottom-0 w-full bg-[#121212] border-t border-gray-800 z-50 md:hidden flex justify-around py-3 pb-5 text-[10px] text-gray-400">
+                <button onClick={() => setActiveTab('home')} className={`flex flex-col items-center gap-1 ${activeTab === 'home' ? 'text-white' : ''}`}>
+                    <Home size={24} strokeWidth={activeTab === 'home' ? 2.5 : 2} /> Home
+                </button>
+                <button onClick={() => setActiveTab('vault')} className={`flex flex-col items-center gap-1 ${activeTab === 'vault' ? 'text-white' : ''}`}>
+                    <List size={24} strokeWidth={activeTab === 'vault' ? 2.5 : 2} /> Vault
+                </button>
+                <button className="flex flex-col items-center gap-1">
+                    <Trophy size={24} /> Live
+                </button>
+                 <button className="flex flex-col items-center gap-1">
+                    <User size={24} /> My
+                </button>
+            </div>
+        );
+
         const Hero = ({ onPlay }) => (
-            <div className="relative h-[70vh] w-full overflow-hidden">
-                <div className="absolute inset-0 bg-cover bg-center" style={{ backgroundImage: `url('${HERO_CONTENT.image}')` }}>
-                    <div className="absolute inset-0 bg-gradient-to-t from-black via-black/60 to-transparent"></div>
+            <div className="relative h-[80vh] w-full overflow-hidden group">
+                <div className="absolute inset-0 bg-cover bg-center transition-transform duration-[10s] group-hover:scale-105" style={{ backgroundImage: `url('${HERO_CONTENT.image}')` }}>
+                    <div className="absolute inset-0 bg-gradient-to-t from-[#000] via-[#00000040] to-transparent"></div>
+                    <div className="absolute inset-0 bg-gradient-to-r from-[#000000cc] via-[#00000040] to-transparent"></div>
                 </div>
-                <div className="absolute bottom-0 left-0 p-6 md:p-12 w-full md:w-2/3 space-y-4">
-                    <div className="flex gap-2 mb-2">
-                        <span className="bg-red-600 text-white text-xs font-bold px-2 py-0.5 rounded">REMASTERED</span>
-                        <span className="bg-gray-800 text-gray-300 text-xs font-bold px-2 py-0.5 rounded">4K</span>
+                <div className="absolute bottom-0 left-0 p-6 md:p-16 w-full md:w-[600px] space-y-5 pb-24 md:pb-16">
+                    <div className="flex items-center gap-3 mb-2 opacity-0 animate-in" style={{animationDelay: '0.2s'}}>
+                        <span className="text-green-400 font-bold text-sm">{HERO_CONTENT.match}</span>
+                        <span className="bg-gray-700/80 text-white text-[10px] font-bold px-1.5 py-0.5 rounded border border-gray-500">4K</span>
+                         <span className="bg-red-600 text-white text-[10px] font-bold px-1.5 py-0.5 rounded">REMASTERED</span>
                     </div>
-                    <h1 className="text-5xl md:text-7xl font-black text-white tracking-tight leading-none">THE BLUFF<br/>OF THE CENTURY</h1>
-                    <p className="text-gray-300 text-sm md:text-lg line-clamp-2 md:line-clamp-none max-w-xl">{HERO_CONTENT.description}</p>
-                    <div className="flex gap-3 pt-4">
-                        <button onClick={onPlay} className="bg-white text-black px-6 py-3 rounded font-bold flex items-center gap-2 hover:bg-gray-200 transition-colors">
-                            <Play size={20} fill="black" /> Play Now
+                    <h1 className="text-5xl md:text-7xl font-black text-white tracking-tight leading-[0.9] opacity-0 animate-in" style={{animationDelay: '0.4s'}}>
+                        THE BLUFF<br/>OF THE CENTURY
+                    </h1>
+                    <p className="text-gray-300 text-sm md:text-base line-clamp-3 opacity-0 animate-in" style={{animationDelay: '0.6s'}}>
+                        {HERO_CONTENT.description}
+                    </p>
+                    <div className="flex gap-3 pt-2 opacity-0 animate-in" style={{animationDelay: '0.8s'}}>
+                        <button onClick={onPlay} className="bg-white text-black px-8 py-3 rounded-[4px] font-bold flex items-center gap-2 hover:bg-gray-200 transition-colors text-lg">
+                            <Play size={24} fill="black" /> Play
+                        </button>
+                        <button className="bg-gray-500/40 backdrop-blur-md text-white px-6 py-3 rounded-[4px] font-bold flex items-center gap-2 hover:bg-gray-500/60 transition-colors">
+                            <Info size={24} /> More Info
                         </button>
                     </div>
                 </div>
@@ -123,6 +206,7 @@
         const SmartPlayer = ({ content, onClose }) => {
             const [progress, setProgress] = useState(0);
             const [isPlaying, setIsPlaying] = useState(true);
+            const [showSkip, setShowSkip] = useState(true);
 
             useEffect(() => {
                 const timer = setInterval(() => { if (isPlaying) setProgress(p => (p >= 100 ? 0 : p + 0.2)); }, 100);
@@ -130,53 +214,147 @@
             }, [isPlaying]);
 
             return (
-                <div className="fixed inset-0 bg-black z-[60] flex flex-col animate-in">
-                    <div className="absolute top-0 w-full p-4 flex justify-between items-center z-20 bg-gradient-to-b from-black/90 to-transparent">
-                        <h2 className="text-white font-bold">{content.title || "Video Player"}</h2>
-                        <button onClick={onClose} className="text-white/80 hover:text-white p-2 bg-white/10 rounded-full backdrop-blur"><X size={24} /></button>
-                    </div>
-                    <div className="flex-1 relative flex items-center justify-center bg-gray-900 group">
-                        <div className="text-center opacity-50">
-                            <Play size={80} className="mx-auto mb-4 text-red-600" />
-                            <p className="text-gray-400 font-mono text-sm">[ Streaming 4K Source... ]</p>
+                <div className="fixed inset-0 bg-black z-[100] flex flex-col animate-in">
+                    {/* Top Overlay */}
+                    <div className="absolute top-0 w-full p-6 flex justify-between items-start z-20 bg-gradient-to-b from-black/80 to-transparent">
+                        <div>
+                            <h2 className="text-white font-bold text-xl drop-shadow-md">{content.title}</h2>
+                            <div className="flex items-center gap-2 text-sm text-gray-300 drop-shadow-sm mt-1">
+                                <span className="text-red-500 font-bold">LIVE DATA</span>
+                                <span className="w-1 h-1 bg-gray-500 rounded-full"></span>
+                                <span>{content.year || "2024"}</span>
+                            </div>
                         </div>
-                        <div className="absolute bottom-32 right-8 animate-bounce">
-                            <button className="bg-white text-black font-bold px-5 py-3 rounded-lg shadow-xl flex items-center gap-2 hover:scale-105 transition-transform">
-                                <SkipForward size={18} fill="black" /> SKIP TO ACTION
-                            </button>
+                        <button onClick={onClose} className="text-white hover:text-gray-300 p-2 bg-black/40 rounded-full backdrop-blur-md border border-white/10">
+                            <X size={28} />
+                        </button>
+                    </div>
+
+                    {/* Video Simulation */}
+                    <div className="flex-1 relative flex items-center justify-center bg-gray-900 group overflow-hidden">
+                        <img src={content.image || content.thumbnail} className="absolute inset-0 w-full h-full object-cover opacity-40 blur-sm scale-110" />
+                        <div className="z-10 text-center">
+                            <Play size={60} className="mx-auto mb-4 text-white/80" fill="white" />
+                            <p className="text-white/60 font-mono text-xs tracking-widest">BUFFERING STREAM...</p>
+                        </div>
+                        
+                        {/* Skip to Action Button */}
+                        {showSkip && (
+                            <div className="absolute bottom-32 right-8 z-30 animate-[bounce_2s_infinite]">
+                                <button onClick={() => setShowSkip(false)} className="bg-white text-black font-bold px-6 py-3 rounded-[4px] shadow-[0_0_20px_rgba(255,255,255,0.3)] flex items-center gap-3 hover:scale-105 transition-transform border-2 border-transparent hover:border-red-600">
+                                    <SkipForward size={20} fill="black" /> 
+                                    <span className="uppercase tracking-wide text-sm">Skip to Action</span>
+                                </button>
+                            </div>
+                        )}
+
+                        {/* WSOP+ Data Overlay Simulation */}
+                        <div className="absolute top-24 right-8 bg-black/70 backdrop-blur-md border border-white/10 p-4 rounded-md w-64">
+                             <div className="text-[10px] text-gray-400 uppercase tracking-wider mb-2">Real-time Probability</div>
+                             <div className="space-y-3">
+                                <div className="flex justify-between items-center">
+                                    <div className="flex items-center gap-2">
+                                        <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
+                                        <span className="text-sm font-bold">Moneymaker</span>
+                                    </div>
+                                    <span className="text-green-400 font-mono font-bold">64%</span>
+                                </div>
+                                <div className="w-full bg-gray-700 h-1 rounded-full overflow-hidden">
+                                    <div className="bg-green-500 h-full" style={{width: '64%'}}></div>
+                                </div>
+                                <div className="flex justify-between items-center">
+                                    <div className="flex items-center gap-2">
+                                        <span className="text-sm text-gray-400">Farha</span>
+                                    </div>
+                                    <span className="text-gray-500 font-mono">36%</span>
+                                </div>
+                             </div>
                         </div>
                     </div>
-                    <div className="bg-gradient-to-t from-black via-black/90 to-transparent p-6">
-                        <div className="relative w-full h-12 mb-2 flex items-end pb-4">
-                            <div className="absolute bottom-4 left-0 w-full h-1.5 bg-gray-700 rounded-full cursor-pointer overflow-hidden">
+
+                    {/* Controls */}
+                    <div className="bg-gradient-to-t from-black via-black/90 to-transparent p-6 z-20">
+                        <div className="relative w-full h-12 mb-2 flex items-end pb-4 group">
+                            <div className="absolute bottom-4 left-0 w-full h-1.5 bg-gray-700/50 rounded-full cursor-pointer overflow-hidden group-hover:h-2 transition-all">
                                 <div className="h-full bg-red-600" style={{width: `${progress}%`}}></div>
                             </div>
+                            {/* Timeline Markers */}
                             {content.timeline && content.timeline.map((marker, idx) => (
-                                <div key={idx} className="absolute bottom-4 w-3 h-3 bg-white rounded-full cursor-pointer hover:scale-150 transition-transform group" style={{left: `${(marker.time/200)*100}%`, transform: 'translate(-50%, 50%)'}}>
-                                    <div className="absolute bottom-5 left-1/2 -translate-x-1/2 bg-gray-800 text-white text-[10px] px-2 py-1 rounded opacity-0 group-hover:opacity-100 whitespace-nowrap border border-gray-600 transition-opacity">{marker.label}</div>
+                                <div key={idx} className="absolute bottom-4 w-3 h-3 bg-white rounded-full cursor-pointer hover:scale-150 transition-transform z-10 shadow-lg" style={{left: `${(marker.time/200)*100}%`, transform: 'translate(-50%, 50%)'}}>
+                                    <div className="absolute bottom-6 left-1/2 -translate-x-1/2 bg-gray-800 text-white text-[10px] px-2 py-1 rounded opacity-0 group-hover:opacity-100 whitespace-nowrap border border-gray-600 transition-opacity">
+                                        {marker.label}
+                                    </div>
                                 </div>
                             ))}
                         </div>
-                        <div className="flex justify-between items-center text-white">
-                            <button onClick={() => setIsPlaying(!isPlaying)}>{isPlaying ? "PAUSE" : <Play size={20} fill="white"/>}</button>
-                            <span className="text-sm font-mono text-gray-400">HD • CC</span>
+                        <div className="flex justify-between items-center text-white px-1">
+                            <button onClick={() => setIsPlaying(!isPlaying)} className="hover:text-red-500 transition-colors">
+                                {isPlaying ? <span className="font-bold text-sm">PAUSE</span> : <Play size={24} fill="white"/>}
+                            </button>
+                            <div className="flex gap-4 text-xs font-bold text-gray-400">
+                                <span className="border border-gray-600 px-1 rounded">4K</span>
+                                <span className="border border-gray-600 px-1 rounded">5.1</span>
+                            </div>
                         </div>
                     </div>
                 </div>
             );
         };
 
+        const ContentRow = ({ title, items, onPlay }) => (
+            <div className="py-4 pl-4 md:pl-12 mb-4">
+                <h3 className="text-white font-bold text-base md:text-xl mb-3 flex items-center gap-2 group cursor-pointer hover:text-red-500 transition-colors">
+                    {title} <ChevronRight size={16} className="opacity-0 group-hover:opacity-100 transition-opacity duration-300 -translate-x-2 group-hover:translate-x-0" />
+                </h3>
+                <div className="flex overflow-x-auto gap-3 pb-8 no-scrollbar snap-x">
+                    {items.map((item) => (
+                        <div key={item.id} onClick={() => onPlay(item)} className="flex-none w-[160px] md:w-[280px] group cursor-pointer snap-start item-hover transition-transform duration-300">
+                            <div className="relative aspect-video rounded-sm overflow-hidden bg-gray-800">
+                                <img src={item.image} className="w-full h-full object-cover opacity-90 group-hover:opacity-100 transition-opacity" loading="lazy" />
+                                <div className="absolute bottom-0 left-0 w-full h-1/2 bg-gradient-to-t from-black/90 to-transparent"></div>
+                                <div className="absolute bottom-2 left-2 right-2">
+                                    <h4 className="text-white font-bold text-xs md:text-sm truncate">{item.title}</h4>
+                                    <div className="flex items-center gap-2 text-[10px] text-gray-400 mt-0.5">
+                                        <span>{item.duration}</span>
+                                        <span className="w-0.5 h-0.5 bg-gray-500 rounded-full"></span>
+                                        <span>{item.views} views</span>
+                                    </div>
+                                </div>
+                                <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                                    <div className="bg-black/60 rounded-full p-1.5 border border-white/20">
+                                        <Play size={12} fill="white" />
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    ))}
+                </div>
+            </div>
+        );
+
         const ArchiveCard = ({ item, onPlay }) => (
-            <div onClick={() => onPlay(item)} className="group cursor-pointer bg-[#1a1a1a] rounded-lg overflow-hidden hover:border-red-600/50 border border-transparent transition-all duration-300">
+            <div onClick={() => onPlay(item)} className="group cursor-pointer bg-[#181818] rounded-md overflow-hidden hover:scale-105 transition-all duration-300 hover:z-10 hover:shadow-2xl hover:ring-2 hover:ring-red-600">
                 <div className="relative aspect-video overflow-hidden bg-gray-800">
                     <img src={item.thumbnail} alt={item.title} className="w-full h-full object-cover opacity-80 group-hover:opacity-100 transition-opacity" />
                     <div className="absolute top-2 left-2"><HoleCards cards={item.cards} /></div>
-                    <div className="absolute bottom-2 right-2 bg-black/80 text-white text-[10px] px-1.5 py-0.5 rounded font-mono">{item.duration}</div>
+                    <div className="absolute bottom-2 right-2 bg-black/60 backdrop-blur-sm text-white text-[10px] px-1.5 py-0.5 rounded font-mono border border-white/10">{item.duration}</div>
+                    <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity bg-black/20">
+                         <Play size={32} fill="white" className="drop-shadow-lg" />
+                    </div>
                 </div>
-                <div className="p-4">
-                    <h3 className="text-white font-bold text-sm line-clamp-1 group-hover:text-red-500 transition-colors">{item.title}</h3>
-                    <div className="flex items-center gap-2 text-xs text-gray-500 mb-3"><span>{item.year}</span> • <span>{item.event}</span></div>
-                    <div className="flex flex-wrap gap-1.5">{item.tags && item.tags.map(tag => <span key={tag} className="text-[10px] bg-gray-800 text-gray-300 px-2 py-0.5 rounded border border-gray-700">#{tag}</span>)}</div>
+                <div className="p-3">
+                    <div className="flex items-start justify-between">
+                         <h3 className="text-white font-bold text-sm line-clamp-1 text-gray-200 group-hover:text-white">{item.title}</h3>
+                    </div>
+                    <div className="flex items-center gap-2 text-[10px] text-gray-500 mb-2 mt-1">
+                        <span className="border border-gray-700 px-1 rounded">{item.year}</span> 
+                        <span>{item.event}</span>
+                    </div>
+                    <div className="flex flex-wrap gap-1.5">
+                        {item.tags && item.tags.map(tag => (
+                            <span key={tag} className="text-[9px] text-gray-400">#{tag}</span>
+                        ))}
+                    </div>
                 </div>
             </div>
         );
@@ -186,41 +364,47 @@
             const [selectedVideo, setSelectedVideo] = useState(null);
 
             return (
-                <div className="bg-black min-h-screen font-sans text-gray-100 flex flex-col">
+                <div className="bg-[#141414] min-h-screen font-sans text-gray-100 flex flex-col">
                     <Navbar activeTab={activeTab} setActiveTab={setActiveTab} />
                     
+                    {/* 메인 컨텐츠 */}
                     {activeTab === 'home' && (
-                        <div className="pb-20 md:pb-0">
+                        <div className="pb-20">
                             <Hero onPlay={() => setSelectedVideo(HERO_CONTENT)} />
-                            <div className="mt-4 px-6">
+                            <div className="-mt-24 relative z-10 space-y-2">
                                 {CATEGORIES.map(cat => (
-                                    <div key={cat.id} className="py-4">
-                                        <h3 className="text-lg font-bold mb-2 text-gray-100">{cat.title}</h3>
-                                        <div className="flex gap-4 overflow-x-auto no-scrollbar">
-                                            {cat.items.map(item => (
-                                                <div key={item.id} className="flex-none w-40 aspect-video bg-gray-800 rounded-md flex items-center justify-center text-gray-500 text-xs border border-gray-700 cursor-pointer hover:border-red-600 transition-colors" onClick={()=>setSelectedVideo(item)}>
-                                                    {item.title}
-                                                </div>
-                                            ))}
-                                        </div>
-                                    </div>
+                                    <ContentRow key={cat.id} title={cat.title} items={cat.items} onPlay={setSelectedVideo} />
                                 ))}
                             </div>
                         </div>
                     )}
 
+                    {/* 아카이브 (The Vault) */}
                     {activeTab === 'vault' && (
-                        <div className="pt-16 px-4 md:px-8 pb-24 flex-1 overflow-y-auto">
-                            <div className="flex justify-between items-end mb-6 mt-4">
-                                <div><h2 className="text-3xl font-bold text-white">The Vault</h2><p className="text-sm text-gray-500">Historic Moments Remastered</p></div>
+                        <div className="pt-20 px-4 md:px-12 pb-24 flex-1 overflow-y-auto animate-in">
+                            <div className="flex justify-between items-end mb-8 border-b border-gray-800 pb-4">
+                                <div>
+                                    <h2 className="text-4xl font-black text-white tracking-tight mb-1">The Vault</h2>
+                                    <p className="text-sm text-gray-400">Explore 50 years of poker history.</p>
+                                </div>
+                                <div className="hidden md:flex gap-2">
+                                    {['Bluffs', 'Bad Beats', 'Final Tables', 'Meltdowns'].map(tag => (
+                                        <button key={tag} className="px-4 py-1.5 bg-[#222] text-gray-300 text-xs font-bold rounded-full border border-gray-700 hover:border-white hover:bg-white hover:text-black transition-all">{tag}</button>
+                                    ))}
+                                </div>
                             </div>
-                            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-y-8 gap-x-6">
                                 {ARCHIVE_DATA.map(item => <ArchiveCard key={item.id} item={item} onPlay={setSelectedVideo} />)}
+                                {ARCHIVE_DATA.map(item => <ArchiveCard key={`dup-${item.id}`} item={{...item, id: `dup-${item.id}`}} onPlay={setSelectedVideo} />)}
                             </div>
                         </div>
                     )}
 
+                    {/* 비디오 플레이어 모달 */}
                     {selectedVideo && <SmartPlayer content={selectedVideo} onClose={() => setSelectedVideo(null)} />}
+                    
+                    {/* 모바일 네비게이션 */}
+                    <MobileNav activeTab={activeTab} setActiveTab={setActiveTab} />
                 </div>
             );
         };
