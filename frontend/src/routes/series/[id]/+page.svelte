@@ -36,7 +36,7 @@
 		try {
 			series = await api.get<Series>(`/series/${seriesId}`);
 		} catch (err: any) {
-			error = err.message || '시리즈를 불러오는데 실패했습니다';
+			error = err.message || 'Failed to load series';
 		} finally {
 			isLoading = false;
 		}
@@ -46,24 +46,24 @@
 		const hours = Math.floor(seconds / 3600);
 		const minutes = Math.floor((seconds % 3600) / 60);
 		if (hours > 0) {
-			return `${hours}시간 ${minutes}분`;
+			return `${hours}h ${minutes}m`;
 		}
-		return `${minutes}분`;
+		return `${minutes}m`;
 	}
 
 	function formatViewCount(count: number): string {
-		if (count >= 10000) {
-			return `${(count / 10000).toFixed(1)}만`;
+		if (count >= 1000000) {
+			return `${(count / 1000000).toFixed(1)}M`;
 		}
 		if (count >= 1000) {
-			return `${(count / 1000).toFixed(1)}천`;
+			return `${(count / 1000).toFixed(1)}K`;
 		}
 		return count.toString();
 	}
 </script>
 
 <svelte:head>
-	<title>{series?.title || '시리즈'} - WSOPTV</title>
+	<title>{series?.title || 'Series'} - WSOPTV</title>
 </svelte:head>
 
 <div class="series-page container">
@@ -84,9 +84,9 @@
 			<div class="series-meta">
 				<span class="year">{series.year}</span>
 				{#if series.seasonNum}
-					<span class="season">시즌 {series.seasonNum}</span>
+					<span class="season">Season {series.seasonNum}</span>
 				{/if}
-				<span class="count">{series.contents.length}개 에피소드</span>
+				<span class="count">{series.contents.length} episodes</span>
 			</div>
 			{#if series.description}
 				<p class="description">{series.description}</p>
@@ -94,10 +94,10 @@
 		</header>
 
 		<section class="contents-section">
-			<h2>에피소드</h2>
+			<h2>Episodes</h2>
 
 			{#if series.contents.length === 0}
-				<p class="empty">아직 등록된 에피소드가 없습니다.</p>
+				<p class="empty">No episodes available yet.</p>
 			{:else}
 				<div class="contents-list">
 					{#each series.contents as content, index}
@@ -121,7 +121,7 @@
 											<p class="content-description">{content.description}</p>
 										{/if}
 										<div class="content-meta">
-											<span class="views">조회 {formatViewCount(content.viewCount)}</span>
+											<span class="views">{formatViewCount(content.viewCount)} views</span>
 										</div>
 									</div>
 								</div>

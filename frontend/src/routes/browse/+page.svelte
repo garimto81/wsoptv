@@ -61,7 +61,7 @@
 			total = response.total;
 			hasNext = response.hasNext;
 		} catch (err: any) {
-			error = err.message || '콘텐츠를 불러오는데 실패했습니다';
+			error = err.message || 'Failed to load contents';
 		} finally {
 			isLoading = false;
 			isLoadingMore = false;
@@ -88,25 +88,25 @@
 	}
 
 	function formatViewCount(count: number): string {
-		if (count >= 10000) {
-			return `${(count / 10000).toFixed(1)}만`;
+		if (count >= 1000000) {
+			return `${(count / 1000000).toFixed(1)}M`;
 		}
 		if (count >= 1000) {
-			return `${(count / 1000).toFixed(1)}천`;
+			return `${(count / 1000).toFixed(1)}K`;
 		}
 		return count.toString();
 	}
 </script>
 
 <svelte:head>
-	<title>브라우징 - WSOPTV</title>
+	<title>Browse - WSOPTV</title>
 </svelte:head>
 
 <div class="browse-page container">
 	<header class="page-header">
 		<div class="header-content">
-			<h1>브라우징</h1>
-			<p class="subtitle">총 {total.toLocaleString()}개 콘텐츠</p>
+			<h1>Browse</h1>
+			<p class="subtitle">{total.toLocaleString()} contents</p>
 		</div>
 
 		<div class="sort-options">
@@ -115,14 +115,14 @@
 				class:active={sortBy === 'recent'}
 				onclick={() => changeSort('recent')}
 			>
-				최신순
+				Recent
 			</button>
 			<button
 				class="sort-btn"
 				class:active={sortBy === 'popular'}
 				onclick={() => changeSort('popular')}
 			>
-				인기순
+				Popular
 			</button>
 		</div>
 	</header>
@@ -154,7 +154,7 @@
 								</a>
 							{/if}
 							<div class="meta">
-								<span>조회 {formatViewCount(content.viewCount)}</span>
+								<span>{formatViewCount(content.viewCount)} views</span>
 							</div>
 						</div>
 					</Card>
@@ -172,7 +172,7 @@
 					{#if isLoadingMore}
 						<Spinner size="sm" />
 					{:else}
-						더 보기
+						Load More
 					{/if}
 				</button>
 			</div>

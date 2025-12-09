@@ -3,21 +3,21 @@
 	import { Button } from '$lib/components/ui';
 
 	const status = $derived($page.status);
-	const message = $derived($page.error?.message || '페이지를 찾을 수 없습니다');
+	const message = $derived($page.error?.message || 'Page not found');
 
 	const errorMessages: Record<number, string> = {
-		400: '잘못된 요청입니다',
-		401: '로그인이 필요합니다',
-		403: '접근 권한이 없습니다',
-		404: '페이지를 찾을 수 없습니다',
-		500: '서버 오류가 발생했습니다'
+		400: 'Bad Request',
+		401: 'Authentication Required',
+		403: 'Access Denied',
+		404: 'Page Not Found',
+		500: 'Server Error'
 	};
 
 	const displayMessage = $derived(errorMessages[status] || message);
 </script>
 
 <svelte:head>
-	<title>오류 {status} - WSOPTV</title>
+	<title>Error {status} - WSOPTV</title>
 </svelte:head>
 
 <div class="error-page">
@@ -26,22 +26,22 @@
 		<h1>{displayMessage}</h1>
 		<p class="error-description">
 			{#if status === 404}
-				요청하신 페이지가 존재하지 않거나 이동되었을 수 있습니다.
+				The page you requested does not exist or may have been moved.
 			{:else if status === 401}
-				이 페이지를 보려면 로그인이 필요합니다.
+				Please sign in to view this page.
 			{:else if status === 403}
-				이 페이지에 접근할 권한이 없습니다.
+				You do not have permission to access this page.
 			{:else}
-				일시적인 오류가 발생했습니다. 잠시 후 다시 시도해 주세요.
+				A temporary error occurred. Please try again later.
 			{/if}
 		</p>
 
 		<div class="error-actions">
 			<a href="/">
-				<Button variant="primary">홈으로</Button>
+				<Button variant="primary">Go to Home</Button>
 			</a>
 			<Button variant="secondary" onclick={() => history.back()}>
-				뒤로 가기
+				Go Back
 			</Button>
 		</div>
 	</div>

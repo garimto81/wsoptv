@@ -71,7 +71,7 @@
 				progressSaveInterval = setInterval(saveProgress, 10000);
 			}
 		} catch (err: any) {
-			error = err.message || '콘텐츠를 불러오는데 실패했습니다';
+			error = err.message || 'Failed to load content';
 		} finally {
 			isLoading = false;
 		}
@@ -114,7 +114,7 @@
 </script>
 
 <svelte:head>
-	<title>{content?.title || '시청 중'} - WSOPTV</title>
+	<title>{content?.title || 'Now Playing'} - WSOPTV</title>
 </svelte:head>
 
 <div class="watch-page">
@@ -151,7 +151,7 @@
 						<p class="description">{content.description}</p>
 					{/if}
 					<div class="meta">
-						<span>조회 {content.viewCount.toLocaleString()}회</span>
+						<span>{content.viewCount.toLocaleString()} views</span>
 					</div>
 				</header>
 			</div>
@@ -166,7 +166,7 @@
 					/>
 				{:else}
 					<div class="no-hands">
-						<p>핸드 정보가 없습니다</p>
+						<p>No hand information available</p>
 					</div>
 				{/if}
 			</aside>

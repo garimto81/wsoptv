@@ -3,21 +3,21 @@
 </script>
 
 <svelte:head>
-	<title>가입 대기 중 - WSOPTV</title>
+	<title>Registration Pending - WSOPTV</title>
 </svelte:head>
 
 <div class="pending-page">
 	<Card padding="lg">
 		<div class="pending-content">
 			<div class="icon">⏳</div>
-			<h1>가입 신청 완료</h1>
-			<p>회원가입 신청이 접수되었습니다.</p>
-			<p class="sub">관리자 승인 후 서비스 이용이 가능합니다.</p>
-			<p class="sub">승인 완료 시 알림을 보내드립니다.</p>
+			<h1>Registration Submitted</h1>
+			<p>Your registration request has been received.</p>
+			<p class="sub">Access will be available after admin approval.</p>
+			<p class="sub">You will be notified once approved.</p>
 
 			<div class="actions">
 				<a href="/">
-					<Button variant="secondary">홈으로</Button>
+					<Button variant="secondary">Go to Home</Button>
 				</a>
 			</div>
 		</div>

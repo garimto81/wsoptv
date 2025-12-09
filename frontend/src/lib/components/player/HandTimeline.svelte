@@ -64,15 +64,15 @@
 
 <div class="hand-timeline">
 	<div class="timeline-header">
-		<h3>핸드 타임라인</h3>
+		<h3>Hand Timeline</h3>
 		<div class="nav-buttons">
 			<button
 				class="nav-btn"
 				onclick={previousHand}
 				disabled={currentHandIndex <= 0}
-				aria-label="이전 핸드"
+				aria-label="Previous hand"
 			>
-				← 이전
+				← Prev
 			</button>
 			<span class="hand-counter">
 				{#if currentHand}
@@ -85,9 +85,9 @@
 				class="nav-btn"
 				onclick={nextHand}
 				disabled={currentHandIndex >= hands.length - 1}
-				aria-label="다음 핸드"
+				aria-label="Next hand"
 			>
-				다음 →
+				Next →
 			</button>
 		</div>
 	</div>
@@ -99,7 +99,7 @@
 				class:active={hand === currentHand}
 				style="left: {(hand.startSec / duration) * 100}%; width: {((hand.endSec - hand.startSec) / duration) * 100}%; background-color: {gradeColors[hand.grade]}"
 				onclick={() => goToHand(hand)}
-				title="핸드 #{hand.handNumber || hand.id} ({hand.grade})"
+				title="Hand #{hand.handNumber || hand.id} ({hand.grade})"
 			>
 			</button>
 		{/each}
@@ -115,7 +115,7 @@
 				{currentHand.grade}
 			</div>
 			<div class="hand-details">
-				<strong>핸드 #{currentHand.handNumber || currentHand.id}</strong>
+				<strong>Hand #{currentHand.handNumber || currentHand.id}</strong>
 				<span class="hand-meta">
 					{formatTime(currentHand.startSec)} - {formatTime(currentHand.endSec)}
 					{#if currentHand.potSizeBb}
@@ -129,7 +129,7 @@
 					{/if}
 				</span>
 				{#if currentHand.winner}
-					<span class="winner">승자: {currentHand.winner}</span>
+					<span class="winner">Winner: {currentHand.winner}</span>
 				{/if}
 			</div>
 		</div>

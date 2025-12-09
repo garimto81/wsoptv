@@ -68,7 +68,7 @@
 			// Update URL
 			goto(`/search?q=${encodeURIComponent(query)}`, { replaceState: true });
 		} catch (err: any) {
-			error = err.message || '검색에 실패했습니다';
+			error = err.message || 'Search failed. Please try again.';
 		} finally {
 			isLoading = false;
 		}
@@ -127,20 +127,20 @@
 </script>
 
 <svelte:head>
-	<title>{query ? `"${query}" 검색 결과` : '검색'} - WSOPTV</title>
+	<title>{query ? `"${query}" search results` : 'Search'} - WSOPTV</title>
 </svelte:head>
 
 <div class="search-page container">
 	<header class="search-header">
-		<h1>검색</h1>
+		<h1>Search</h1>
 		<form class="search-form" onsubmit={handleSubmit}>
 			<input
 				type="search"
 				class="search-input"
-				placeholder="콘텐츠, 플레이어, 핸드 검색..."
+				placeholder="Search contents, players, hands..."
 				bind:value={query}
 			/>
-			<Button type="submit" variant="primary">검색</Button>
+			<Button type="submit" variant="primary">Search</Button>
 		</form>
 	</header>
 
@@ -148,15 +148,15 @@
 		{#if facets && (facets.catalogs.length || facets.years.length || facets.grades.length)}
 			<aside class="filters">
 				<div class="filter-header">
-					<h3>필터</h3>
+					<h3>Filters</h3>
 					{#if selectedCatalogs.length || selectedYears.length || selectedGrades.length}
-						<button class="clear-btn" onclick={clearFilters}>초기화</button>
+						<button class="clear-btn" onclick={clearFilters}>Clear</button>
 					{/if}
 				</div>
 
 				{#if facets.catalogs.length}
 					<div class="filter-group">
-						<h4>카탈로그</h4>
+						<h4>Catalog</h4>
 						{#each facets.catalogs as cat}
 							<label class="filter-item">
 								<input
@@ -173,7 +173,7 @@
 
 				{#if facets.years.length}
 					<div class="filter-group">
-						<h4>연도</h4>
+						<h4>Year</h4>
 						{#each facets.years as year}
 							<label class="filter-item">
 								<input
@@ -190,7 +190,7 @@
 
 				{#if facets.grades.length}
 					<div class="filter-group">
-						<h4>등급</h4>
+						<h4>Grade</h4>
 						{#each facets.grades as grade}
 							<label class="filter-item">
 								<input
@@ -216,15 +216,15 @@
 				<div class="error">{error}</div>
 			{:else if !query}
 				<div class="empty">
-					<p>검색어를 입력하세요</p>
+					<p>Enter a search term</p>
 				</div>
 			{:else if results.length === 0}
 				<div class="empty">
-					<p>"{query}"에 대한 검색 결과가 없습니다</p>
+					<p>No results found for "{query}"</p>
 				</div>
 			{:else}
 				<div class="results-header">
-					<p>{total.toLocaleString()}개 결과</p>
+					<p>{total.toLocaleString()} results</p>
 				</div>
 
 				<div class="results-grid">

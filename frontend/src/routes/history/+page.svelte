@@ -71,7 +71,7 @@
 			total = response.total;
 			hasNext = response.hasNext;
 		} catch (err: any) {
-			error = err.message || '시청 기록을 불러오는데 실패했습니다';
+			error = err.message || 'Failed to load watch history';
 		} finally {
 			isLoading = false;
 			isLoadingMore = false;
@@ -102,9 +102,9 @@
 		const hours = Math.floor(seconds / 3600);
 		const minutes = Math.floor((seconds % 3600) / 60);
 		if (hours > 0) {
-			return `${hours}시간 ${minutes}분`;
+			return `${hours}h ${minutes}m`;
 		}
-		return `${minutes}분`;
+		return `${minutes}m`;
 	}
 
 	function formatDate(dateString: string): string {
@@ -113,21 +113,21 @@
 		const diff = now.getTime() - date.getTime();
 		const days = Math.floor(diff / (1000 * 60 * 60 * 24));
 
-		if (days === 0) return '오늘';
-		if (days === 1) return '어제';
-		if (days < 7) return `${days}일 전`;
-		return date.toLocaleDateString('ko-KR');
+		if (days === 0) return 'Today';
+		if (days === 1) return 'Yesterday';
+		if (days < 7) return `${days} days ago`;
+		return date.toLocaleDateString('en-US');
 	}
 </script>
 
 <svelte:head>
-	<title>시청 기록 - WSOPTV</title>
+	<title>Watch History - WSOPTV</title>
 </svelte:head>
 
 <div class="history-page container">
 	<header class="page-header">
-		<h1>시청 기록</h1>
-		<p class="subtitle">총 {total}개</p>
+		<h1>Watch History</h1>
+		<p class="subtitle">{total} items</p>
 	</header>
 
 	<div class="filter-tabs">
@@ -136,21 +136,21 @@
 			class:active={filter === 'all'}
 			onclick={() => setFilter('all')}
 		>
-			전체
+			All
 		</button>
 		<button
 			class="filter-tab"
 			class:active={filter === 'in-progress'}
 			onclick={() => setFilter('in-progress')}
 		>
-			시청 중
+			In Progress
 		</button>
 		<button
 			class="filter-tab"
 			class:active={filter === 'completed'}
 			onclick={() => setFilter('completed')}
 		>
-			시청 완료
+			Completed
 		</button>
 	</div>
 
@@ -162,9 +162,9 @@
 		<div class="error">{error}</div>
 	{:else if items.length === 0}
 		<div class="empty">
-			<p>시청 기록이 없습니다</p>
+			<p>No watch history found</p>
 			<a href="/">
-				<Button variant="primary">콘텐츠 둘러보기</Button>
+				<Button variant="primary">Browse Content</Button>
 			</a>
 		</div>
 	{:else}
@@ -183,7 +183,7 @@
 									<div class="progress-fill" style="width: {item.progressPercent}%"></div>
 								</div>
 								{#if item.completed}
-									<span class="completed-badge">완료</span>
+									<span class="completed-badge">Done</span>
 								{/if}
 							</a>
 
@@ -203,13 +203,13 @@
 							<div class="item-actions">
 								<a href="/watch/{item.contentId}">
 									<Button variant="primary" size="sm">
-										{item.completed ? '다시 보기' : '이어 보기'}
+										{item.completed ? 'Watch Again' : 'Continue'}
 									</Button>
 								</a>
 								<button
 									class="remove-btn"
 									onclick={() => removeItem(item.contentId)}
-									aria-label="기록 삭제"
+									aria-label="Remove from history"
 								>
 									✕
 								</button>
@@ -223,7 +223,7 @@
 		{#if hasNext}
 			<div class="load-more">
 				<Button variant="secondary" loading={isLoadingMore} onclick={loadMore}>
-					더 보기
+					Load More
 				</Button>
 			</div>
 		{/if}

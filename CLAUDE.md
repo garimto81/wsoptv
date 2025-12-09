@@ -220,6 +220,59 @@ API 문서: `http://localhost:8001/docs`
 | **NAS 마운트** | `/mnt/nas` (Linux) 또는 `Z:` (Windows) |
 | **관리자 승인** | 회원가입 후 관리자 승인 필요 |
 | **스트리밍 중계** | NAS → Frontend(중계) → 시청자 구조 |
+| **UI 언어** | **모든 웹 UI 텍스트는 영문으로 작성** |
+
+---
+
+## UI Language Guidelines (English Only)
+
+**모든 프론트엔드 UI 텍스트는 반드시 영문으로 작성합니다.**
+
+### 영문 작성 대상
+
+| 카테고리 | 예시 |
+|----------|------|
+| 페이지 제목 | "Login - WSOPTV", "Browse - WSOPTV" |
+| 버튼 텍스트 | "Sign In", "Register", "Load More" |
+| 폼 레이블 | "Username", "Password", "Display Name" |
+| 에러 메시지 | "Login failed", "Invalid credentials" |
+| 안내 문구 | "Please wait for admin approval" |
+| 네비게이션 | "Home", "Browse", "Search", "History" |
+| 플레이어 | "Hand Timeline", "Previous", "Next" |
+
+### 예외 사항 (한국어 허용)
+
+- 코드 주석 (개발자용)
+- CLAUDE.md 등 문서 파일
+- 로그 메시지 (백엔드)
+- 콘텐츠 데이터 (DB에서 가져오는 제목 등)
+
+### 표준 UI 텍스트 참조
+
+```
+Navigation:
+  Home, Browse, Search, History, Admin, Login, Sign Out
+
+Auth:
+  Sign In, Register, Username, Password, Confirm Password
+  Display Name (Optional), Sign In, Create Account
+  Don't have an account? / Already have an account?
+  ⚠️ Admin approval required after registration.
+
+Status:
+  Loading..., No results found, Load More
+  X items, X episodes, X views
+
+Player:
+  Hand Timeline, Previous, Next, Winner
+  Play, Pause, Mute, Unmute, Fullscreen
+
+Time/Date:
+  Xh Xm, Today, Yesterday, X days ago
+
+Errors:
+  Failed to load..., Something went wrong, Please try again
+```
 
 ---
 

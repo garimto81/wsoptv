@@ -19,7 +19,7 @@
 		try {
 			catalogs = await api.get<Catalog[]>('/catalogs');
 		} catch (err: any) {
-			error = err.message || '카탈로그를 불러오는데 실패했습니다';
+			error = err.message || 'Failed to load catalogs';
 		} finally {
 			isLoading = false;
 		}
@@ -27,17 +27,17 @@
 </script>
 
 <svelte:head>
-	<title>WSOPTV - 포커 VOD 스트리밍</title>
+	<title>WSOPTV - Poker VOD Streaming</title>
 </svelte:head>
 
 <div class="home">
 	<section class="hero">
 		<h1>WSOPTV</h1>
-		<p>세계 최고의 포커 방송을 한 곳에서</p>
+		<p>The world's best poker broadcasts in one place</p>
 	</section>
 
 	<section class="catalogs container">
-		<h2>카탈로그</h2>
+		<h2>Catalogs</h2>
 
 		{#if isLoading}
 			<div class="loading">

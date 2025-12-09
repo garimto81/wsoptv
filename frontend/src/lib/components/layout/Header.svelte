@@ -24,32 +24,32 @@
 		</a>
 
 		<nav class="nav">
-			<a href="/" class="nav-link">홈</a>
-			<a href="/browse" class="nav-link">브라우징</a>
-			<a href="/search" class="nav-link">검색</a>
+			<a href="/" class="nav-link">Home</a>
+			<a href="/browse" class="nav-link">Browse</a>
+			<a href="/search" class="nav-link">Search</a>
 		</nav>
 
 		<form class="search-form" onsubmit={handleSearch}>
 			<input
 				type="search"
 				class="search-input"
-				placeholder="검색..."
+				placeholder="Search..."
 				bind:value={searchQuery}
 			/>
 		</form>
 
 		<div class="user-menu">
 			{#if authStore.isAuthenticated}
-				<a href="/history" class="nav-link">내 기록</a>
+				<a href="/history" class="nav-link">History</a>
 				{#if authStore.isAdmin}
-					<a href="/admin" class="nav-link">관리자</a>
+					<a href="/admin" class="nav-link">Admin</a>
 				{/if}
 				<button class="user-button" onclick={handleLogout}>
 					{authStore.user?.displayName || authStore.user?.username}
 				</button>
 			{:else}
 				<a href="/login">
-					<Button variant="primary" size="sm">로그인</Button>
+					<Button variant="primary" size="sm">Sign In</Button>
 				</a>
 			{/if}
 		</div>

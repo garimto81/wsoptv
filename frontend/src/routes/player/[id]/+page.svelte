@@ -39,7 +39,7 @@
 		try {
 			player = await api.get<Player>(`/players/${playerId}`);
 		} catch (err: any) {
-			error = err.message || '플레이어 정보를 불러오는데 실패했습니다';
+			error = err.message || 'Failed to load player information';
 		} finally {
 			isLoading = false;
 		}
@@ -60,7 +60,7 @@
 </script>
 
 <svelte:head>
-	<title>{player?.displayName || '플레이어'} - WSOPTV</title>
+	<title>{player?.displayName || 'Player'} - WSOPTV</title>
 </svelte:head>
 
 <div class="player-page container">
@@ -94,29 +94,29 @@
 				<Card padding="md">
 					<div class="stat">
 						<span class="stat-value">{player.totalHands.toLocaleString()}</span>
-						<span class="stat-label">총 핸드</span>
+						<span class="stat-label">Total Hands</span>
 					</div>
 				</Card>
 				<Card padding="md">
 					<div class="stat">
 						<span class="stat-value">{player.totalWins.toLocaleString()}</span>
-						<span class="stat-label">승리</span>
+						<span class="stat-label">Wins</span>
 					</div>
 				</Card>
 				<Card padding="md">
 					<div class="stat">
 						<span class="stat-value">{winRate}%</span>
-						<span class="stat-label">승률</span>
+						<span class="stat-label">Win Rate</span>
 					</div>
 				</Card>
 			</div>
 		</section>
 
 		<section class="hands-section">
-			<h2>참여 핸드</h2>
+			<h2>Played Hands</h2>
 
 			{#if player.hands.length === 0}
-				<p class="empty">참여한 핸드가 없습니다.</p>
+				<p class="empty">No hands played yet.</p>
 			{:else}
 				<div class="hands-grid">
 					{#each player.hands as hand}
@@ -135,7 +135,7 @@
 											<span class="grade" style="color: {gradeColors[hand.grade]}">{hand.grade}</span>
 											<span class="hand-number">#{hand.handNumber || hand.id}</span>
 											{#if hand.isWinner}
-												<span class="winner-badge">승리</span>
+												<span class="winner-badge">Win</span>
 											{/if}
 										</div>
 										{#if hand.content}

@@ -16,12 +16,12 @@
 
 		// Validation
 		if (password !== confirmPassword) {
-			error = '비밀번호가 일치하지 않습니다';
+			error = 'Passwords do not match';
 			return;
 		}
 
 		if (password.length < 8) {
-			error = '비밀번호는 8자 이상이어야 합니다';
+			error = 'Password must be at least 8 characters';
 			return;
 		}
 
@@ -31,7 +31,7 @@
 			await authStore.register(username, password, displayName || undefined);
 			goto('/register/pending');
 		} catch (err: any) {
-			error = err.message || '회원가입에 실패했습니다';
+			error = err.message || 'Registration failed. Please try again.';
 		} finally {
 			isLoading = false;
 		}
@@ -39,14 +39,14 @@
 </script>
 
 <svelte:head>
-	<title>회원가입 - WSOPTV</title>
+	<title>Register - WSOPTV</title>
 </svelte:head>
 
 <div class="register-page">
 	<Card padding="lg">
 		<div class="register-header">
-			<h1>회원가입</h1>
-			<p>WSOPTV에 가입하고 포커 방송을 즐기세요</p>
+			<h1>Create Account</h1>
+			<p>Join WSOPTV and enjoy poker broadcasts</p>
 		</div>
 
 		<form class="register-form" onsubmit={handleSubmit}>
@@ -55,51 +55,51 @@
 			{/if}
 
 			<Input
-				label="사용자명"
+				label="Username"
 				type="text"
-				placeholder="사용자명 (영문, 숫자)"
+				placeholder="Letters and numbers only"
 				bind:value={username}
 				required
 				autocomplete="username"
 			/>
 
 			<Input
-				label="표시 이름 (선택)"
+				label="Display Name (Optional)"
 				type="text"
-				placeholder="표시될 이름"
+				placeholder="Name to display"
 				bind:value={displayName}
 				autocomplete="name"
 			/>
 
 			<Input
-				label="비밀번호"
+				label="Password"
 				type="password"
-				placeholder="8자 이상"
+				placeholder="At least 8 characters"
 				bind:value={password}
 				required
 				autocomplete="new-password"
 			/>
 
 			<Input
-				label="비밀번호 확인"
+				label="Confirm Password"
 				type="password"
-				placeholder="비밀번호 재입력"
+				placeholder="Re-enter password"
 				bind:value={confirmPassword}
 				required
 				autocomplete="new-password"
 			/>
 
 			<div class="notice">
-				<p>⚠️ 회원가입 후 관리자 승인이 필요합니다.</p>
+				<p>⚠️ Admin approval is required after registration.</p>
 			</div>
 
 			<Button type="submit" variant="primary" loading={isLoading}>
-				회원가입
+				Create Account
 			</Button>
 		</form>
 
 		<div class="register-footer">
-			<p>이미 계정이 있으신가요? <a href="/login">로그인</a></p>
+			<p>Already have an account? <a href="/login">Sign In</a></p>
 		</div>
 	</Card>
 </div>

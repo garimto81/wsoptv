@@ -33,7 +33,7 @@
 		try {
 			catalog = await api.get<Catalog>(`/catalogs/${catalogId}`);
 		} catch (err: any) {
-			error = err.message || '카탈로그를 불러오는데 실패했습니다';
+			error = err.message || 'Failed to load catalog';
 		} finally {
 			isLoading = false;
 		}
@@ -41,7 +41,7 @@
 </script>
 
 <svelte:head>
-	<title>{catalog?.displayTitle || '카탈로그'} - WSOPTV</title>
+	<title>{catalog?.displayTitle || 'Catalog'} - WSOPTV</title>
 </svelte:head>
 
 <div class="catalog-page container">
@@ -60,10 +60,10 @@
 		</header>
 
 		<section class="series-section">
-			<h2>시리즈</h2>
+			<h2>Series</h2>
 
 			{#if catalog.series.length === 0}
-				<p class="empty">아직 등록된 시리즈가 없습니다.</p>
+				<p class="empty">No series available yet.</p>
 			{:else}
 				<div class="series-grid">
 					{#each catalog.series as series}
@@ -83,10 +83,10 @@
 									<div class="series-meta">
 										<span class="year">{series.year}</span>
 										{#if series.seasonNum}
-											<span class="season">시즌 {series.seasonNum}</span>
+											<span class="season">Season {series.seasonNum}</span>
 										{/if}
 										{#if series.contentCount}
-											<span class="count">{series.contentCount}개 에피소드</span>
+											<span class="count">{series.contentCount} episodes</span>
 										{/if}
 									</div>
 								</div>

@@ -6,11 +6,11 @@
 	<div class="footer-content">
 		<div class="footer-section">
 			<h4 class="footer-title">WSOPTV</h4>
-			<p class="footer-text">세계 최고의 포커 방송을 한 곳에서</p>
+			<p class="footer-text">The world's best poker broadcasts in one place</p>
 		</div>
 
 		<div class="footer-section">
-			<h4 class="footer-title">카탈로그</h4>
+			<h4 class="footer-title">Catalogs</h4>
 			<ul class="footer-links">
 				<li><a href="/catalog/wsop">WSOP</a></li>
 				<li><a href="/catalog/hcl">Hustler Casino Live</a></li>
@@ -20,11 +20,11 @@
 		</div>
 
 		<div class="footer-section">
-			<h4 class="footer-title">도움말</h4>
+			<h4 class="footer-title">Help</h4>
 			<ul class="footer-links">
-				<li><a href="/help">이용 가이드</a></li>
-				<li><a href="/faq">자주 묻는 질문</a></li>
-				<li><a href="/contact">문의하기</a></li>
+				<li><a href="/help">User Guide</a></li>
+				<li><a href="/faq">FAQ</a></li>
+				<li><a href="/contact">Contact Us</a></li>
 			</ul>
 		</div>
 	</div>
