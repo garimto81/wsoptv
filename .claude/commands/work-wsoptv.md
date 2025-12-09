@@ -67,17 +67,26 @@ Orchestrator → Domain Agent → Block AGENT_RULES → 구현 → 검증
     │      ├─ 블럭 폴더 내에서만 작업
     │      └─ types.ts 먼저 수정
     │
-    ├─ Phase 4: 검증
-    │      │
-    │      ├─ AGENT_RULES.md 체크리스트 검증
-    │      ├─ DON'T 규칙 위반 검사
-    │      └─ 테스트 실행
+    ├─ Phase 4: E2E 자동 검증 (Zero-Interrupt) ────────────────┐
+    │      │                                                      │
+    │      ├─ Step 4.1: 타입 체크 + 린트                          │
+    │      ├─ Step 4.2: 단위 테스트 (Vitest)                      │
+    │      ├─ Step 4.3: E2E 테스트 (Playwright)                   │
+    │      │      └─ 3개 브라우저 병렬 실행                       │
+    │      ├─ Step 4.4: 시각적 회귀 테스트                        │
+    │      ├─ Step 4.5: 성능 벤치마크 (Web Vitals)                │
+    │      └─ Step 4.6: 실패 시 자동 수정 (최대 3회)          ────┘
     │
-    └─ Phase 5: 보고 + PR
+    ├─ Phase 5: 최종 보고서 생성
+    │      │
+    │      ├─ 변경 요약 + 테스트 결과
+    │      ├─ 커밋 생성
+    │      └─ PR 링크
+    │
+    └─ Phase 6: 사용자 검증 태스크 (마지막)
            │
-           ├─ 변경 파일 범위 검증
-           ├─ 커밋 생성
-           └─ PR 생성 제안
+           └─ 반드시 사람이 필요한 항목만 요청
+              (UI 승인, 비즈니스 로직 검토 등)
 ```
 
 ---
@@ -296,53 +305,104 @@ for file in files_to_modify:
 
 ---
 
-## Phase 4: 검증
+## Phase 4: E2E 자동 검증 (Zero-Interrupt)
 
-### AGENT_RULES 체크리스트 검증
+> **핵심 원칙**: 모든 검증은 자동으로 수행하고, 실패 시 AI가 자동 수정 시도.
+> 사용자는 최종 결과만 보고받습니다.
 
-```python
-# AGENT_RULES.md의 체크리스트 자동 검증
-checklist = parse_checklist(f"apps/web/features/{domain}/AGENT_RULES.md")
-
-for item in checklist:
-    result = verify_checklist_item(item)
-    if not result.passed:
-        print(f"⚠️ 체크리스트 미충족: {item}")
-```
-
-### DON'T 규칙 위반 검사
-
-```python
-# 변경된 파일 목록 검사
-changed_files = git_diff_files()
-
-violations = []
-for file in changed_files:
-    # 블럭 범위 외 파일 수정 검사
-    if not file.startswith(f"apps/web/features/{domain}/"):
-        if file not in ["packages/types/*.ts"]:  # 허용된 예외
-            violations.append(f"범위 외 수정: {file}")
-
-if violations:
-    print("❌ DON'T 규칙 위반 발견:")
-    for v in violations:
-        print(f"  - {v}")
-```
-
-### 테스트 실행
+### Step 4.1: 타입 체크 + 린트
 
 ```bash
-# 블럭 단위 테스트
-cd apps/web/features/{domain}
-npm test -- --coverage
-
-# 타입 체크
+# 타입 체크 (필수)
 npx tsc --noEmit
+
+# 린트 (자동 수정 가능)
+npm run lint -- --fix
+```
+
+실패 시 자동 수정:
+```python
+if type_error:
+    analyze_type_error(error_message)
+    auto_fix_types()
+    retry_type_check()
+```
+
+### Step 4.2: 단위 테스트 (Vitest)
+
+```bash
+# 변경된 블럭만 테스트 (속도 최적화)
+npm run test:unit -- --coverage --reporter=json \
+    apps/web/features/{domain}/
+```
+
+### Step 4.3: E2E 테스트 (Playwright)
+
+```bash
+# 관련 스펙만 실행 (도메인 기반)
+npx playwright test e2e/specs/{domain}/ \
+    --workers=4 \
+    --reporter=html,json
+```
+
+병렬 실행 설정:
+- Chromium, Firefox, WebKit 3개 브라우저
+- 4개 워커로 병렬 처리
+- 실패 시 자동 재시도 2회
+
+### Step 4.4: 시각적 회귀 테스트
+
+```bash
+# 스크린샷 비교
+npx playwright test e2e/visual/ --update-snapshots
+```
+
+변경 감지 시:
+- 스냅샷 diff 생성
+- 의도된 변경인 경우 자동 업데이트
+- 비의도적 변경인 경우 경고
+
+### Step 4.5: 성능 벤치마크 (Web Vitals)
+
+```bash
+npx playwright test e2e/performance/
+```
+
+체크 항목:
+| 메트릭 | 기준 | 측정 |
+|--------|------|------|
+| LCP | < 2.5s | Largest Contentful Paint |
+| FID | < 100ms | First Input Delay |
+| CLS | < 0.1 | Cumulative Layout Shift |
+
+### Step 4.6: 자동 수정 루프
+
+```python
+MAX_RETRIES = 3
+
+for attempt in range(MAX_RETRIES):
+    result = run_all_tests()
+
+    if result.success:
+        break
+
+    # 실패 분석 및 자동 수정
+    failures = analyze_failures(result)
+
+    for failure in failures:
+        if failure.auto_fixable:
+            apply_fix(failure.suggested_fix)
+        else:
+            # 자동 수정 불가 → 에스컬레이션
+            escalate_to_human(failure)
+
+if not result.success after MAX_RETRIES:
+    generate_failure_report()
 ```
 
 ---
 
-## Phase 5: 보고 + PR
+## Phase 5: 최종 보고서 생성
 
 ### 변경 파일 범위 검증
 
@@ -355,20 +415,42 @@ in_scope = [f for f in changed_files if f.startswith(block_path)]
 out_of_scope = [f for f in changed_files if not f.startswith(block_path)]
 
 if out_of_scope:
-    # packages/types/ 는 허용
-    truly_out = [f for f in out_of_scope if not f.startswith("packages/types/")]
+    # packages/types/, e2e/specs/ 는 허용
+    allowed_external = ["packages/types/", "e2e/specs/"]
+    truly_out = [f for f in out_of_scope
+                 if not any(f.startswith(p) for p in allowed_external)]
     if truly_out:
         raise ScopeViolationError(f"범위 외 파일 수정됨: {truly_out}")
+```
+
+### 테스트 결과 요약
+
+```markdown
+## E2E 검증 결과
+
+| 항목 | 결과 | 상세 |
+|------|------|------|
+| 타입 체크 | ✅ | 0 errors |
+| 린트 | ✅ | 0 warnings |
+| 단위 테스트 | ✅ | 42/42 통과 (100%) |
+| E2E 테스트 | ✅ | 15/15 통과 |
+| 시각적 회귀 | ✅ | 변경 없음 |
+| 성능 | ✅ | LCP 1.2s, FID 45ms, CLS 0.02 |
+
+### 자동 수정 이력
+- 시도: 1회
+- 수정 내용: lint auto-fix 적용
 ```
 
 ### 커밋
 
 ```bash
-git add apps/web/features/{domain}/
+git add apps/web/features/{domain}/ e2e/specs/{domain}/
 git commit -m "feat({domain}): {작업 설명}
 
 Block: features/{domain}/
 AGENT_RULES: 준수 ✅
+E2E Tests: 통과 ✅
 
 🤖 Generated with [Claude Code](https://claude.com/claude-code)
 
@@ -386,10 +468,18 @@ gh pr create \
 ## Block Agent Compliance
 | 항목 | 상태 |
 |------|------|
-| Domain | `{domain}` |
-| Block Scope | `features/{domain}/` |
+| Domain | \`{domain}\` |
+| Block Scope | \`features/{domain}/\` |
 | AGENT_RULES | ✅ 준수 |
 | Context Isolation | ✅ 격리됨 |
+
+## E2E 검증 결과
+| 항목 | 결과 |
+|------|------|
+| 타입 체크 | ✅ 통과 |
+| 단위 테스트 | ✅ 42/42 |
+| E2E 테스트 | ✅ 15/15 |
+| 성능 (LCP) | ✅ 1.2s |
 
 ## Changes
 | 파일 | 변경 |
@@ -398,14 +488,61 @@ gh pr create \
 | ... | ... |
 
 ## Document References
-- 📄 `.claude/agents/{domain}-domain.md`
-- 📄 `apps/web/features/{domain}/AGENT_RULES.md`
-- 📄 `docs/architecture/0001-block-agent-system.md`
+- 📄 \`.claude/agents/{domain}-domain.md\`
+- 📄 \`apps/web/features/{domain}/AGENT_RULES.md\`
+- 📄 \`docs/proposals/0001-e2e-automation-workflow.md\`
 
 Fixes #{issue_number}
 
 🤖 Generated with [Claude Code](https://claude.com/claude-code)"
 ```
+
+---
+
+## Phase 6: 사용자 검증 태스크
+
+> **원칙**: 자동화할 수 없는 작업만 사용자에게 요청합니다.
+
+### 사용자 검증이 필요한 경우
+
+| 유형 | 예시 | 자동화 불가 이유 |
+|------|------|-----------------|
+| UI/UX 승인 | 새 버튼 디자인 검토 | 주관적 판단 필요 |
+| 비즈니스 로직 | 가격 계산 로직 변경 | 비즈니스 규칙 확인 필요 |
+| 보안 정책 | 인증 방식 변경 | 정책 결정 필요 |
+| 접근성 | 스크린리더 호환성 | 실제 사용자 테스트 필요 |
+
+### 사용자 검증 요청 형식
+
+```markdown
+---
+## 🧑‍💻 사용자 검증 태스크
+
+> 아래 항목은 자동 검증이 불가능하여 확인이 필요합니다.
+
+### 확인 필요 항목
+
+- [ ] **UI 확인**: 새로운 2FA 입력 폼 디자인
+  - 📎 스크린샷: [첨부]
+  - 체크포인트: 모바일 반응형, 다크모드 지원
+
+- [ ] **동작 확인**: 2FA 코드 만료 시 사용자 경험
+  - 📎 시연 영상: [첨부]
+  - 체크포인트: 에러 메시지 명확성
+
+### 예상 검토 시간
+약 5분
+
+---
+```
+
+### 사용자 검증 건너뛰기 조건
+
+다음 경우 Phase 6을 생략합니다:
+- 순수 리팩토링 (동작 변경 없음)
+- 버그 수정 (기존 동작 복원)
+- 테스트 추가 (프로덕션 코드 변경 없음)
+- 문서 업데이트
 
 ---
 
@@ -419,35 +556,40 @@ Fixes #{issue_number}
 - **도메인**: {domain}
 - **블럭**: features/{domain}/
 
-## Phase 0: Agent 라우팅
+## Phase 0-3: 라우팅 → 분석 → 이슈 → 구현
 - Orchestrator: ✅ 로딩
 - Domain Agent: ✅ {domain}-domain.md
 - AGENT_RULES: ✅ features/{domain}/AGENT_RULES.md
-
-## Phase 1: 컨텍스트 분석
-- Architecture 참조: ✅
-- LLD 참조: ✅
-- 기존 코드 분석: ✅
-
-## Phase 2: 이슈/브랜치
 - 이슈: #{issue_number}
 - 브랜치: feat/{domain}/issue-{N}-{desc}
 
-## Phase 3: 구현
-| 파일 | 변경 | 설명 |
-|------|------|------|
-| types.ts | +30 | 새 타입 추가 |
-| ... | ... | ... |
+## Phase 4: E2E 자동 검증 결과
 
-## Phase 4: 검증
-- DO 규칙: ✅ 모두 준수
-- DON'T 규칙: ✅ 위반 없음
-- 체크리스트: ✅ 완료
-- 테스트: ✅ 통과
+| 항목 | 결과 | 상세 |
+|------|------|------|
+| 타입 체크 | ✅ | 0 errors |
+| 린트 | ✅ | 0 warnings |
+| 단위 테스트 | ✅ | 42/42 통과 (100%) |
+| E2E 테스트 | ✅ | 15/15 통과 |
+| 시각적 회귀 | ✅ | 변경 없음 |
+| 성능 | ✅ | LCP 1.2s, FID 45ms, CLS 0.02 |
+
+### 자동 수정 이력
+- 시도: 1회
+- 수정 내용: lint auto-fix 적용
 
 ## Phase 5: 결과
 - 커밋: {commit_hash}
 - PR: #{pr_number}
+
+## Phase 6: 사용자 검증 태스크
+
+> 아래 항목만 확인이 필요합니다.
+
+- [ ] UI 확인: 새 버튼 디자인 검토
+- [ ] 동작 확인: 2FA 플로우 사용자 경험
+
+---
 
 ## Document Reference Chain
 ```
@@ -457,7 +599,9 @@ orchestrator.md
     ↓ scope
 features/{domain}/AGENT_RULES.md
     ↓ constraints
-구현 완료
+E2E Tests 통과 ✅
+    ↓ verified
+PR 생성 완료
 ```
 ```
 
@@ -476,12 +620,7 @@ $ /work-wsoptv Auth에 2FA 기능 추가
 
 🔍 Phase 1: 컨텍스트 분석 (병렬)
    [Agent 1] Architecture/LLD 분석...
-      - Auth Domain 블럭 구조 확인
-      - 인증 시퀀스 다이어그램 참조
-
    [Agent 2] 블럭 코드 분석...
-      - 기존 타입: LoginRequest, AuthResponse...
-      - 신규 필요: TwoFactorRequest, TwoFactorVerify
 
 📝 Phase 2: 이슈 생성 + 브랜치
    - 이슈 #42 생성: feat(auth): 2FA 기능 추가
@@ -489,22 +628,44 @@ $ /work-wsoptv Auth에 2FA 기능 추가
 
 🔨 Phase 3: 구현 (컨텍스트 격리)
    📁 수정 범위: features/auth/ 만
-   ├─ types.ts      +45 lines (TwoFactorRequest, TwoFactorVerify)
-   ├─ api/authApi.ts +30 lines (verify2FA, setup2FA)
-   ├─ hooks/useAuth.ts +25 lines (2FA 로직)
-   └─ index.ts      +3 lines (Public API)
+   ├─ types.ts      +45 lines
+   ├─ api/authApi.ts +30 lines
+   ├─ hooks/useAuth.ts +25 lines
+   └─ index.ts      +3 lines
 
-✅ Phase 4: 검증
-   - DO 규칙: ✅ 모두 준수
-   - DON'T 규칙: ✅ 위반 없음
-   - Security Checklist: ✅ 완료
-   - 테스트: 12/12 통과
+🤖 Phase 4: E2E 자동 검증 (Zero-Interrupt)
+   ⏳ 타입 체크... ✅
+   ⏳ 린트... ✅ (auto-fix 적용)
+   ⏳ 단위 테스트... ✅ 12/12
+   ⏳ E2E 테스트 (Playwright)...
+      Chromium ✅ | Firefox ✅ | WebKit ✅
+   ⏳ 시각적 회귀... ✅ 변경 없음
+   ⏳ 성능 (Web Vitals)... ✅ LCP 1.8s
 
-📋 Phase 5: 보고 + PR
+📋 Phase 5: 최종 보고서
+   ┌──────────────────────────────────────┐
+   │ E2E 검증 결과                         │
+   │ ─────────────────────────────────── │
+   │ 타입 체크    ✅ 0 errors              │
+   │ 린트        ✅ auto-fixed             │
+   │ 단위 테스트  ✅ 12/12 (100%)          │
+   │ E2E 테스트   ✅ 8/8 (3 browsers)      │
+   │ 성능 (LCP)   ✅ 1.8s                  │
+   │ ─────────────────────────────────── │
+   │ 자동 수정: 1회 (lint)                 │
+   └──────────────────────────────────────┘
    - 커밋: a1b2c3d
-   - PR #43 생성 준비 완료
+   - PR #43 생성 완료
 
-🎉 완료! PR 생성하시겠습니까? (gh pr merge 43 --merge)
+🧑‍💻 Phase 6: 사용자 검증 태스크
+   > 아래 항목만 확인이 필요합니다.
+
+   - [ ] UI 확인: 2FA 입력 폼 디자인 검토
+   - [ ] 동작 확인: OTP 만료 시 사용자 경험
+
+   예상 검토 시간: 약 3분
+
+🎉 완료! PR: https://github.com/.../pull/43
 ```
 
 ---
