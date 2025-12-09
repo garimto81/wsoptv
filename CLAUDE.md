@@ -2,7 +2,7 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
-**Version**: 6.1.0 | **Context**: Windows, PowerShell
+**Version**: 6.2.0 | **Context**: Windows, PowerShell
 
 ---
 
@@ -58,6 +58,7 @@ Orchestrator → Domain Agent → Block → AGENT_RULES.md
 | **stream** | 스트리밍, HLS | `.claude/agents/stream-domain.md` |
 | **search** | 검색, MeiliSearch | `.claude/agents/search-domain.md` |
 | **migration** | 데이터 마이그레이션 | `.claude/agents/migration-domain.md` |
+| **jellyfin** | Jellyfin 통합, 라이브러리 | `.claude/agents/jellyfin-domain.md` |
 
 ### 작업 전 필수 로딩
 
