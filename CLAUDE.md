@@ -1,38 +1,58 @@
 # CLAUDE.md
 
-This file provides guidance to Claude Code when working with code in this repository.
+This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
-**Version**: 2.0.0 | **Context**: Windows, PowerShell, Docker
+**Version**: 4.0.0 | **Context**: Windows, PowerShell
 
 ---
 
 ## Project Overview
 
-WSOPTV는 18TB+ 포커 방송 아카이브를 기반으로 한 초대 기반 VOD 스트리밍 플랫폼입니다.
+WSOPTV는 18TB+ 포커 방송 아카이브를 위한 초대 기반 VOD 스트리밍 플랫폼입니다.
 
-| 항목 | 내용 |
-|------|------|
-| **플랫폼명** | WSOPTV |
-| **타겟 사용자** | 일반 포커 팬 (관리자 승인) |
-| **핵심 기능** | 검색, 스트리밍 중계, 핸드 타임코드, 핸드 스킵 |
-| **인증 방식** | 회원가입 + 관리자 승인 |
+| Stack | Technology |
+|-------|------------|
+| **Frontend** | SvelteKit 2, Svelte 5, TypeScript, hls.js |
+| **Backend** | FastAPI, SQLAlchemy 2, Pydantic 2 |
+| **Database** | PostgreSQL 16, MeiliSearch, Redis |
+| **E2E Testing** | Playwright (Chromium, Firefox, WebKit) |
+| **Infrastructure** | Docker Compose |
 
 ---
 
 ## Architecture
 
 ```
-┌─────────────────────────────────────────────────────────────────┐
-│                 WSOPTV (Docker Network: 172.28.0.0/16)          │
-├─────────────────────────────────────────────────────────────────┤
-│  Database Tier          │  Application Tier                     │
-│  ┌──────────────────┐   │  ┌──────────────────┐                │
-│  │ PostgreSQL :5432 │   │  │ Backend    :8001 │                │
-│  │ MeiliSearch:7700 │   │  │ Frontend   :3000 │                │
-│  │ Redis      :6379 │   │  │ Transcoder       │                │
-│  └──────────────────┘   │  └──────────────────┘                │
-└─────────────────────────────────────────────────────────────────┘
+                    ┌───────────────────────┐
+                    │    Frontend :3000     │
+                    │    (SvelteKit)        │
+                    └───────────┬───────────┘
+                                │
+                    ┌───────────▼───────────┐
+                    │    Backend :8001      │
+                    │    (FastAPI)          │
+                    └───────────┬───────────┘
+                                │
+    ┌───────────────────────────┼───────────────────────────┐
+    │                           │                           │
+    ▼                           ▼                           ▼
+PostgreSQL :5432       MeiliSearch :7700              Redis :6379
 ```
+
+### Block Agent System
+
+AI 컨텍스트 최적화를 위한 도메인 기반 블럭화 아키텍처:
+
+```
+Orchestrator → Domain Agent → Block → AGENT_RULES.md
+```
+
+| Domain | Block Folder | Scope |
+|--------|--------------|-------|
+| auth | `apps/web/features/auth/` | 인증, 세션, JWT |
+| content | `apps/web/features/content/` | 콘텐츠, 핸드, 타임라인 |
+| stream | `apps/web/features/player/` | 스트리밍, HLS |
+| search | `apps/web/features/search/` | 검색, MeiliSearch |
 
 ---
 
@@ -40,166 +60,223 @@ WSOPTV는 18TB+ 포커 방송 아카이브를 기반으로 한 초대 기반 VOD
 
 ```
 wsoptv/
-├── docker-compose.yml          # Docker 서비스 정의
-├── .env                        # 환경 변수 (gitignore)
-├── CLAUDE.md                   # 이 문서
-│
-├── backend/                    # FastAPI 백엔드
-│   ├── Dockerfile
-│   ├── Dockerfile.migrator     # SQLite → PostgreSQL 마이그레이션
-│   ├── requirements.txt
+├── backend/                 # FastAPI 백엔드
 │   └── src/
-│       ├── main.py
-│       ├── api/v1/             # API 엔드포인트
-│       ├── core/               # 설정, 보안, DB
-│       ├── models/             # SQLAlchemy 모델
-│       └── services/           # 비즈니스 로직
+│       ├── main.py         # 앱 엔트리포인트
+│       ├── api/v1/         # API 엔드포인트 (auth, catalogs, contents, search, stream)
+│       ├── core/           # config, database, security, deps
+│       ├── models/         # SQLAlchemy 모델
+│       ├── schemas/        # Pydantic 스키마
+│       └── services/       # 비즈니스 로직
 │
-├── frontend/                   # SvelteKit 프론트엔드
-│   ├── Dockerfile
-│   ├── package.json
+├── frontend/               # SvelteKit 프론트엔드
 │   └── src/
-│       ├── routes/             # 페이지 라우트
-│       ├── lib/components/     # Svelte 컴포넌트
-│       └── lib/stores/         # 상태 관리
+│       ├── routes/         # 페이지 라우트
+│       ├── lib/components/ # UI 컴포넌트
+│       └── lib/stores/     # Svelte 스토어
 │
-├── docker/                     # Docker 설정 파일
-│   └── postgres/
-│       └── init.sql            # PostgreSQL 초기화 스키마
+├── apps/web/               # E2E 테스트 + Feature Blocks
+│   ├── features/           # 도메인별 블럭 (AGENT_RULES.md 포함)
+│   └── e2e/               # Playwright E2E 테스트
 │
-└── docs/
-    └── prds/
-        └── 0001-prd-wsoptv-platform.md
+├── .claude/agents/         # Domain Agent 정의
+└── docker-compose.yml      # 서비스 오케스트레이션
 ```
 
 ---
 
-## Quick Start
+## Build & Run Commands
+
+### Docker (권장)
 
 ```powershell
-# 1. NAS 마운트 (Windows)
-net use Z: \\10.10.100.122\GGPNAs\ARCHIVE /persistent:yes
-
-# 2. 환경 변수 설정
-cp .env.example .env
-# POSTGRES_PASSWORD, MEILI_MASTER_KEY 설정
-
-# 3. Docker 서비스 시작
-docker compose up -d
-
-# 4. 최초 데이터 마이그레이션 (pokervod.db → PostgreSQL)
-docker compose --profile migrate up migrator
-
-# 5. 서비스 확인
-# Frontend: http://localhost:3000
-# Backend:  http://localhost:8001/docs
-# MeiliSearch: http://localhost:7700
+docker compose up -d                      # 전체 서비스 시작
+docker compose logs -f backend            # 백엔드 로그
+docker compose restart backend            # 백엔드 재시작
+docker compose --profile migrate up migrator  # 데이터 마이그레이션
 ```
 
----
-
-## Development Commands
-
-### Docker
+### Backend (로컬 개발)
 
 ```powershell
-docker compose up -d              # 전체 서비스 시작
-docker compose logs -f backend    # 백엔드 로그
-docker compose restart backend    # 백엔드 재시작
-docker compose down               # 전체 중지
-docker compose down -v            # 볼륨 포함 삭제 (주의!)
-```
-
-### Database
-
-```powershell
-# PostgreSQL 접속
-docker exec -it wsoptv-postgres psql -U wsoptv -d wsoptv
-
-# 마이그레이션 실행
-docker compose --profile migrate up migrator
-
-# 백업
-docker run --rm -v wsoptv_postgres-data:/data -v ${PWD}:/backup alpine tar cvf /backup/postgres-backup.tar /data
-```
-
-### Backend (FastAPI)
-
-```powershell
-cd backend
+cd D:\AI\claude01\wsoptv\backend
 pip install -r requirements.txt
 uvicorn src.main:app --reload --port 8001
 
 # 테스트
 pytest tests/ -v
+pytest tests/test_auth.py -v              # 단일 파일
 ```
 
-### Frontend (SvelteKit)
+### Frontend (로컬 개발)
 
 ```powershell
-cd frontend
+cd D:\AI\claude01\wsoptv\frontend
 npm install
-npm run dev                       # 개발 서버 (port 3000)
-npm run build                     # 프로덕션 빌드
-npm test                          # 테스트
+npm run dev                               # 개발 서버 :3000
+npm run build                             # 프로덕션 빌드
+npm run check                             # TypeScript 체크
+npm run lint                              # ESLint
+```
+
+### E2E Testing
+
+```powershell
+cd D:\AI\claude01\wsoptv\apps\web
+npx playwright test                       # 전체 테스트
+npx playwright test e2e/specs/auth/       # 도메인별 테스트
+npx playwright test --project=chromium    # 브라우저 지정
+npx playwright show-report                # 결과 리포트
 ```
 
 ---
 
-## Docker Services
+## Workflow Commands
 
-| Service | Container | Port | IP | 역할 |
-|---------|-----------|------|-----|------|
-| postgres | wsoptv-postgres | 5432 | 172.28.1.1 | Primary DB |
-| meilisearch | wsoptv-meili | 7700 | 172.28.1.2 | 전문 검색 |
-| redis | wsoptv-redis | 6379 | 172.28.1.3 | 캐싱, 작업 큐 |
-| backend | wsoptv-backend | 8001 | 172.28.2.1 | FastAPI |
-| frontend | wsoptv-frontend | 3000 | 172.28.2.2 | SvelteKit |
-| transcoder | wsoptv-transcoder | - | 172.28.2.3 | HLS 트랜스코딩 |
+| 커맨드 | 용도 |
+|--------|------|
+| `/work-wsoptv "작업 지시"` | Block Agent 기반 전체 워크플로우 |
+| `/commit` | 커밋 생성 |
+| `/check` | 린트 + 테스트 |
+| `/tdd` | TDD 워크플로우 |
+
+### /work-wsoptv 실행 흐름
+
+```
+Phase 0: Agent 라우팅
+   ├─ Orchestrator → Domain 결정
+   ├─ Domain Agent 규칙 로딩
+   └─ Block AGENT_RULES.md 로딩
+
+Phase 1: 컨텍스트 분석 (병렬)
+
+Phase 2: 이슈 생성 + 브랜치
+
+Phase 3: 구현 (컨텍스트 격리)
+   └─ 해당 Block 폴더 내에서만 작업
+
+Phase 4: E2E 자동 검증
+   ├─ 타입 체크 + 린트
+   ├─ Vitest 단위 테스트
+   ├─ Playwright E2E (3 브라우저)
+   └─ 실패 시 자동 수정 (최대 3회)
+
+Phase 5: 커밋 + PR
+
+Phase 6: 사용자 검증 (필요시)
+```
+
+---
+
+## Key Constraints
+
+| 규칙 | 설명 |
+|------|------|
+| **main 브랜치 수정 금지** | 반드시 feature 브랜치 생성 |
+| **컨텍스트 격리** | Block 작업 시 해당 폴더 내에서만 수정 |
+| **UI 언어** | 모든 웹 UI 텍스트는 **영문**으로 작성 |
+| **AGENT_RULES 준수** | 각 Block의 DO/DON'T 규칙 확인 필수 |
 
 ---
 
 ## Environment Variables
 
 ```env
-# .env
-POSTGRES_PASSWORD=your_secure_password
+# .env (필수)
+POSTGRES_PASSWORD=your_password
 MEILI_MASTER_KEY=your_meili_key
+JWT_SECRET_KEY=your_jwt_secret
 
-# Google OAuth (Phase 2)
-GOOGLE_CLIENT_ID=
-GOOGLE_CLIENT_SECRET=
+# NAS 마운트 (스트리밍용)
+NAS_LOCAL_PATH=//10.10.100.122/docker/GGPNAs
 ```
 
 ---
 
-## Database Schema
-
-PostgreSQL 16 사용. 주요 테이블:
-
-| Category | Tables |
-|----------|--------|
-| **Core** | catalogs, series, contents, files, players, hands |
-| **Auth** | users, invitations, user_sessions |
-| **User** | watch_progress, view_events, user_favorite_players |
-| **Search** | (MeiliSearch 인덱스) |
-
-상세 스키마: `docker/postgres/init.sql`
-
----
-
-## API Endpoints
+## API Reference
 
 | Method | Endpoint | Description |
 |--------|----------|-------------|
+| POST | `/api/v1/auth/login` | 로그인 |
+| POST | `/api/v1/auth/register` | 회원가입 |
 | GET | `/api/v1/catalogs` | 카탈로그 목록 |
-| GET | `/api/v1/series/{id}` | 시리즈 상세 |
 | GET | `/api/v1/contents/{id}` | 콘텐츠 상세 |
-| GET | `/api/v1/contents/{id}/hands` | 핸드 목록 |
-| GET | `/api/v1/search` | 검색 |
-| GET | `/api/v1/stream/{id}` | HLS 스트리밍 |
+| GET | `/api/v1/search` | 통합 검색 |
+| GET | `/api/v1/stream/{id}/playlist.m3u8` | HLS 스트리밍 |
 
 API 문서: `http://localhost:8001/docs`
+
+---
+
+## Documentation
+
+| 문서 | 위치 | 용도 |
+|------|------|------|
+| Block Agent Architecture | `docs/architecture/0001-block-agent-system.md` | 블럭화 설계 |
+| Domain Agents | `.claude/agents/*.md` | 에이전트 규칙 |
+| Block Rules | `apps/web/features/*/AGENT_RULES.md` | 블럭별 제약사항 |
+| LLD Master | `docs/lld/0001-lld-wsoptv-platform.md` | 전체 구조 |
+| E2E Workflow | `docs/proposals/0001-e2e-automation-workflow.md` | 자동화 워크플로우 |
+
+### 문서 참조 우선순위
+
+| 질문 유형 | 참조 문서 |
+|-----------|-----------|
+| 전체 구조 | `0001-lld-wsoptv-platform.md` |
+| 모듈/타입 | `0002-lld-modules.md` |
+| API | `0003-lld-api.md` |
+| UI 컴포넌트 | `0004-lld-components.md` |
+| 시퀀스/플로우 | `0005-lld-flows.md` |
+
+---
+
+## Current Status: Phase 6 Jellyfin 전환 (진행 중)
+
+> **문제**: Docker Desktop WSL2는 Windows SMB 네트워크 드라이브 pass-through 불가 → HLS 스트리밍 실패
+> **해결**: Jellyfin 하이브리드 아키텍처로 전환 결정 (✅ 승인됨)
+
+### 전환 로드맵
+
+| 주차 | 작업 | 상태 |
+|------|------|------|
+| Week 1-2 | Jellyfin 서버 설치, 라이브러리 구성 | ⬜ **다음 작업** |
+| Week 3-4 | 포커 메타데이터 플러그인 개발 (C#) | ⬜ 대기 |
+| Week 5-6 | 커스텀 웹 UI 통합 | ⬜ 대기 |
+| Week 7-8 | 마이그레이션 & E2E 테스트 | ⬜ 대기 |
+
+### Jellyfin 하이브리드 아키텍처
+
+> ⚠️ **핵심**: Docker 서비스(PostgreSQL, MeiliSearch, Redis)는 **계속 유지**됩니다. Jellyfin만 Windows Native로 설치.
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│  Windows Native                    │  Docker Compose (유지)     │
+│  ─────────────────                 │  ─────────────────────     │
+│  ┌─────────────────┐               │  ┌─────────────────────┐  │
+│  │ Jellyfin :8096  │               │  │ PostgreSQL :5432    │  │
+│  │ • NAS 직접 액세스│               │  │ • 포커 메타데이터   │  │
+│  │ • HW 트랜스코딩 │               │  ├─────────────────────┤  │
+│  │ • HLS 스트리밍  │               │  │ MeiliSearch :7700   │  │
+│  └────────┬────────┘               │  │ • 검색 인덱스       │  │
+│           │                        │  ├─────────────────────┤  │
+│           │ Jellyfin API           │  │ Redis :6379         │  │
+│           ▼                        │  │ • 캐싱/세션         │  │
+│  ┌────────────────────────────────────┴─────────────────────┤  │
+│  │              Backend :8001 (Docker)                      │  │
+│  │              • Jellyfin Proxy + 포커 API                 │  │
+│  └──────────────────────────────────────────────────────────┘  │
+└─────────────────────────────────────────────────────────────────┘
+```
+
+| 컴포넌트 | 배포 | 역할 |
+|----------|------|------|
+| Jellyfin | 🖥️ Windows Native | NAS 스트리밍 (SMB 마운트 가능) |
+| PostgreSQL | 🐳 Docker | 포커 메타 (핸드, 플레이어, 타임코드) |
+| MeiliSearch | 🐳 Docker | 검색 인덱스 |
+| Redis | 🐳 Docker | API 캐싱, 세션 |
+| Backend/Frontend | 🐳 Docker | API + UI |
+
+상세 계획: `docs/proposals/0002-jellyfin-migration.md`
 
 ---
 
@@ -208,113 +285,4 @@ API 문서: `http://localhost:8001/docs`
 | 프로젝트 | 경로 | 역할 |
 |----------|------|------|
 | archive-analyzer | `D:/AI/claude01/archive-analyzer` | NAS 스캔, 메타데이터 추출 |
-| shared-data | `D:/AI/claude01/shared-data` | pokervod.db (원본) |
-
----
-
-## Key Constraints
-
-| 제약 | 설명 |
-|------|------|
-| **Docker 필수** | 모든 서비스는 Docker 컨테이너로 실행 |
-| **NAS 마운트** | `/mnt/nas` (Linux) 또는 `Z:` (Windows) |
-| **관리자 승인** | 회원가입 후 관리자 승인 필요 |
-| **스트리밍 중계** | NAS → Frontend(중계) → 시청자 구조 |
-| **UI 언어** | **모든 웹 UI 텍스트는 영문으로 작성** |
-
----
-
-## UI Language Guidelines (English Only)
-
-**모든 프론트엔드 UI 텍스트는 반드시 영문으로 작성합니다.**
-
-### 영문 작성 대상
-
-| 카테고리 | 예시 |
-|----------|------|
-| 페이지 제목 | "Login - WSOPTV", "Browse - WSOPTV" |
-| 버튼 텍스트 | "Sign In", "Register", "Load More" |
-| 폼 레이블 | "Username", "Password", "Display Name" |
-| 에러 메시지 | "Login failed", "Invalid credentials" |
-| 안내 문구 | "Please wait for admin approval" |
-| 네비게이션 | "Home", "Browse", "Search", "History" |
-| 플레이어 | "Hand Timeline", "Previous", "Next" |
-
-### 예외 사항 (한국어 허용)
-
-- 코드 주석 (개발자용)
-- CLAUDE.md 등 문서 파일
-- 로그 메시지 (백엔드)
-- 콘텐츠 데이터 (DB에서 가져오는 제목 등)
-
-### 표준 UI 텍스트 참조
-
-```
-Navigation:
-  Home, Browse, Search, History, Admin, Login, Sign Out
-
-Auth:
-  Sign In, Register, Username, Password, Confirm Password
-  Display Name (Optional), Sign In, Create Account
-  Don't have an account? / Already have an account?
-  ⚠️ Admin approval required after registration.
-
-Status:
-  Loading..., No results found, Load More
-  X items, X episodes, X views
-
-Player:
-  Hand Timeline, Previous, Next, Winner
-  Play, Pause, Mute, Unmute, Fullscreen
-
-Time/Date:
-  Xh Xm, Today, Yesterday, X days ago
-
-Errors:
-  Failed to load..., Something went wrong, Please try again
-```
-
----
-
-## Documentation
-
-| 문서 | 위치 |
-|------|------|
-| PRD | `docs/prds/0001-prd-wsoptv-platform.md` |
-| LLD Master | `docs/lld/0001-lld-wsoptv-platform.md` |
-| LLD Modules | `docs/lld/0002-lld-modules.md` |
-| LLD API | `docs/lld/0003-lld-api.md` |
-| LLD Components | `docs/lld/0004-lld-components.md` |
-| LLD Flows | `docs/lld/0005-lld-flows.md` |
-| API Docs | `http://localhost:8001/docs` |
-| DB Schema | `docker/postgres/init.sql` |
-
----
-
-## Token Management (토큰 관리)
-
-LLD 문서가 5개로 분할되어 있습니다. 토큰 효율을 위해 다음 규칙을 따릅니다:
-
-### 문서 참조 우선순위
-
-| 질문 유형 | 참조 문서 |
-|-----------|-----------|
-| 전체 구조 파악 | `0001-lld-wsoptv-platform.md` (마스터) |
-| 패키지/타입 구현 | `0002-lld-modules.md` |
-| API 엔드포인트 | `0003-lld-api.md` |
-| UI 컴포넌트 | `0004-lld-components.md` |
-| 시퀀스/플로우 | `0005-lld-flows.md` |
-
-### 토큰 절약 전략
-
-```
-1. 마스터 문서 먼저 확인 → 필요한 서브 문서만 참조
-2. 전체 문서 읽기 대신 필요한 섹션만 검색
-3. 관련 이슈 번호로 문서 내 변경사항 추적
-```
-
-### 문서 버전
-
-모든 LLD 문서는 v2.0.0으로 통일 (2025-12-09)
-- 보안/성능/로직/스타일 이슈 32건 반영
-- GitHub Issues: #1 ~ #32
+| shared-data | `D:/AI/claude01/shared-data` | pokervod.db (원본 데이터) |

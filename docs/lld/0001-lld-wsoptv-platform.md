@@ -1,8 +1,10 @@
 # LLD: WSOPTV Platform (Master)
 
-**Version**: 2.0.0 | **Date**: 2025-12-09 | **PRD**: [0001-prd-wsoptv-platform.md](../prds/0001-prd-wsoptv-platform.md)
+**Version**: 3.0.0 | **Date**: 2025-12-09 | **PRD**: [0001-prd-wsoptv-platform.md](../prds/0001-prd-wsoptv-platform.md)
 
 > 토큰 최적화된 마스터 문서. 상세 구현은 서브 LLD 참조.
+>
+> ⚠️ **Phase 2 전환 예정**: Jellyfin 하이브리드 아키텍처로 전환 승인됨. [상세 계획](../proposals/0002-jellyfin-migration.md)
 
 ---
 
@@ -169,6 +171,74 @@ graph LR
 
 ---
 
+## 9. Phase 2: Jellyfin 하이브리드 아키텍처 (전환 예정)
+
+Docker Desktop + Windows SMB 제약으로 Jellyfin 기반 하이브리드 아키텍처로 전환이 승인되었습니다.
+
+> ⚠️ **핵심**: Docker 서비스(PostgreSQL, MeiliSearch, Redis)는 **계속 유지**됩니다. Jellyfin만 Windows Native로 설치.
+
+### 9.1 배포 구조
+
+| 컴포넌트 | 배포 방식 | 역할 | 변경사항 |
+|----------|----------|------|----------|
+| **Jellyfin** | 🖥️ Windows Native | 미디어 스트리밍, NAS 직접 액세스, HW 트랜스코딩 | **신규** |
+| **PostgreSQL** | 🐳 Docker | 포커 메타데이터 (핸드, 플레이어, 타임코드, 사용자) | 유지 |
+| **MeiliSearch** | 🐳 Docker | 검색 인덱스 (포커 특화) | 유지 |
+| **Redis** | 🐳 Docker | API 캐싱, Jellyfin 응답 캐싱, 세션 | 유지 |
+| **Backend** | 🐳 Docker | Jellyfin Proxy + 포커 메타 API | 수정 |
+| **Frontend** | 🐳 Docker | SvelteKit UI (Jellyfin 플레이어 통합) | 수정 |
+
+### 9.2 전환 아키텍처
+
+```
+┌──────────────────────────────────────────────────────────────────────────┐
+│                    WSOPTV Phase 2: Hybrid Deployment                      │
+├──────────────────────────────────────────────────────────────────────────┤
+│                                                                           │
+│  [Windows Native]                    [Docker Compose - 유지]              │
+│  ┌─────────────────────┐             ┌──────────────────────────────┐   │
+│  │ Jellyfin :8096      │             │ PostgreSQL :5432 (포커 메타) │   │
+│  │ • NAS 직접 마운트   │             │ MeiliSearch :7700 (검색)     │   │
+│  │   (Z:\GGPNAs)       │             │ Redis :6379 (캐싱)           │   │
+│  │ • HW 트랜스코딩     │             ├──────────────────────────────┤   │
+│  │ • HLS 스트리밍      │────────────▶│ Backend :8001                │   │
+│  └─────────────────────┘  API 호출   │ • Jellyfin Proxy             │   │
+│                                       │ • 포커 메타 API              │   │
+│                                       ├──────────────────────────────┤   │
+│                                       │ Frontend :3000               │   │
+│                                       │ • Jellyfin 플레이어 통합     │   │
+│                                       │ • 핸드 타임라인/스킵 UI      │   │
+│                                       └──────────────────────────────┘   │
+│                                                                           │
+└──────────────────────────────────────────────────────────────────────────┘
+
+[네트워크 통신]
+• Backend → Jellyfin: http://host.docker.internal:8096 (Docker에서 호스트 접근)
+• Backend ↔ PostgreSQL/MeiliSearch/Redis: Docker 내부 네트워크 (172.28.x.x)
+• Frontend → Backend: Docker 내부 (SvelteKit 서버 프록시)
+```
+
+### 전환 일정
+
+| 주차 | 작업 | 담당 |
+|------|------|------|
+| Week 1-2 | Jellyfin 설치, 라이브러리 구성 | jellyfin-agent |
+| Week 3-4 | 포커 메타데이터 플러그인 개발 | poker-agent |
+| Week 5-6 | 커스텀 웹 UI 개발 | frontend-agent |
+| Week 7-8 | 통합 테스트 및 마이그레이션 | test-agent |
+
+### 코드 변경 범위
+
+| 레이어 | 변경률 | 주요 변경 |
+|--------|--------|----------|
+| Backend | ~60-70% | streaming 모듈 제거, Jellyfin 연동 추가 |
+| Frontend | ~40-50% | 플레이어 Jellyfin 통합 |
+| Plugin | 100% 신규 | C# Jellyfin 플러그인 개발 |
+
+상세 계획: [docs/proposals/0002-jellyfin-migration.md](../proposals/0002-jellyfin-migration.md)
+
+---
+
 ## 변경 이력
 
 | Version | Date | Changes |
@@ -176,3 +246,4 @@ graph LR
 | 1.0.0 | 2025-12-09 | 초기 LLD (단일 문서) |
 | 2.0.0 | 2025-12-09 | 마스터 + 서브 문서 분할 |
 | 2.1.0 | 2025-12-09 | 보안/성능/로직/스타일 이슈 32건 수정 (#1-#32) |
+| 3.0.0 | 2025-12-09 | Jellyfin 하이브리드 아키텍처 전환 계획 추가 |
