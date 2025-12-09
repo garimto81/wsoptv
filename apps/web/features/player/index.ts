@@ -13,23 +13,37 @@
 // ============================================================================
 // Components
 // ============================================================================
-// export { VideoPlayer } from './components/VideoPlayer';
-// export { PlayerControls } from './components/PlayerControls';
-// export { Timeline } from './components/Timeline';
-// export { HandOverlay } from './components/HandOverlay';
-// export { SkipButtons } from './components/SkipButtons';
+export { VideoPlayer, PlayerControls, Timeline } from './components';
 
 // ============================================================================
 // Hooks
 // ============================================================================
-// export { usePlayer } from './hooks/usePlayer';
-// export { useTimeline } from './hooks/useTimeline';
-// export { useHandNavigation } from './hooks/useHandNavigation';
+export {
+  usePlayer,
+  useTimeline,
+  useHandNavigation,
+  usePlayerEvents,
+  getQualityLabel,
+  getSegmentColor,
+  timeToPosition,
+  positionToTime
+} from './hooks/usePlayer';
 
 // ============================================================================
 // Stores
 // ============================================================================
-// export { usePlayerStore } from './stores/playerStore';
+export { playerStore } from './stores/playerStore';
+
+// ============================================================================
+// API
+// ============================================================================
+export {
+  getStreamUrl,
+  getQualityOptions,
+  getTimelineSegments,
+  trackPlayerEvent,
+  isHlsSupported
+} from './api/playerApi';
 
 // ============================================================================
 // Types

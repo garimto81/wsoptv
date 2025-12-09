@@ -5,7 +5,7 @@
  * 이 파일을 통해서만 외부에서 접근 가능
  *
  * @example
- * import { ContentCard, useContent } from '@/features/content';
+ * import { ContentCard, useContent } from '$features/content';
  *
  * @see AGENT_RULES.md
  */
@@ -13,23 +13,24 @@
 // ============================================================================
 // Components
 // ============================================================================
-// export { ContentCard } from './components/ContentCard';
-// export { ContentList } from './components/ContentList';
-// export { ContentDetail } from './components/ContentDetail';
-// export { HandList } from './components/HandList';
-// export { EpisodeSelector } from './components/EpisodeSelector';
+export { ContentCard, ContentList, HandList } from './components';
 
 // ============================================================================
 // Hooks
 // ============================================================================
-// export { useContent } from './hooks/useContent';
-// export { useHands } from './hooks/useHands';
-// export { useWatchProgress } from './hooks/useWatchProgress';
+export {
+  useContent,
+  useHands,
+  useWatchProgress,
+  sortContents,
+  getGradeLabel,
+  getGradeColor
+} from './hooks/useContent';
 
 // ============================================================================
 // Stores
 // ============================================================================
-// export { useContentStore } from './stores/contentStore';
+export { useContentStore, contentStore } from './stores/contentStore';
 
 // ============================================================================
 // Types

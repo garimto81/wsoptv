@@ -5,7 +5,7 @@
  * 이 파일을 통해서만 외부에서 접근 가능
  *
  * @example
- * import { useAuth, LoginForm } from '@/features/auth';
+ * import { useAuth, LoginForm } from '$features/auth';
  *
  * @see AGENT_RULES.md
  */
@@ -13,20 +13,22 @@
 // ============================================================================
 // Components
 // ============================================================================
-// export { LoginForm } from './components/LoginForm';
-// export { RegisterForm } from './components/RegisterForm';
-// export { LogoutButton } from './components/LogoutButton';
+export { LoginForm, RegisterForm, LogoutButton } from './components';
 
 // ============================================================================
 // Hooks
 // ============================================================================
-// export { useAuth } from './hooks/useAuth';
-// export { useSession } from './hooks/useSession';
+export { useAuth, useSession, useRequireAuth, hasRole, isAdmin, isApproved } from './hooks/useAuth';
 
 // ============================================================================
 // Stores
 // ============================================================================
-// export { useAuthStore } from './stores/authStore';
+export { useAuthStore, authStore } from './stores/authStore';
+
+// ============================================================================
+// API
+// ============================================================================
+export { getAccessToken, loadTokens } from './api/authApi';
 
 // ============================================================================
 // Types
