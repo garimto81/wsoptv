@@ -9,6 +9,7 @@ from fastapi.responses import Response, StreamingResponse
 from sqlalchemy import select
 from sqlalchemy.orm import selectinload
 
+from ...core.config import settings
 from ...core.deps import ActiveUser, DbSession
 from ...models.content import Content
 from ...services.streaming import streaming_service
@@ -166,11 +167,14 @@ async def get_segment(
             },
         )
 
+    # Convert DB path to container path
+    container_path = settings.convert_nas_path(content.file.nas_path)
+
     return StreamingResponse(
         streaming_service.get_segment(
             content_id=content_id,
             segment_index=segment_index,
-            nas_path=content.file.nas_path,
+            nas_path=container_path,
             quality=quality,
         ),
         media_type="video/mp2t",

@@ -11,7 +11,7 @@ from sqlalchemy.orm import selectinload
 from ...core.config import settings
 from ...core.deps import ActiveUser, DbSession
 from ...models.content import Content
-from ...models.hand import Hand
+from ...models.hand import Hand, HandPlayer
 from ...models.series import Series
 from ...schemas.common import ApiResponse, PaginatedResponse
 from ...schemas.content import (
@@ -50,7 +50,12 @@ async def get_series(
     result = await db.execute(
         select(Series)
         .where(Series.id == series_id)
-        .options(selectinload(Series.contents).selectinload(Content.hands))
+        .options(
+            selectinload(Series.contents)
+            .selectinload(Content.hands)
+            .selectinload(Hand.players)
+            .selectinload(HandPlayer.player)
+        )
     )
     series = result.scalar_one_or_none()
 
@@ -126,7 +131,7 @@ async def list_contents(
     """
     query = select(Content).options(
         selectinload(Content.series),
-        selectinload(Content.hands),
+        selectinload(Content.hands).selectinload(Hand.players).selectinload(HandPlayer.player),
     )
 
     if series_id:
@@ -191,7 +196,7 @@ async def get_content(
         .where(Content.id == content_id)
         .options(
             selectinload(Content.series),
-            selectinload(Content.hands),
+            selectinload(Content.hands).selectinload(Hand.players).selectinload(HandPlayer.player),
             selectinload(Content.file),
         )
     )
@@ -269,7 +274,7 @@ async def list_hands(
     query = (
         select(Hand)
         .where(Hand.content_id == content_id)
-        .options(selectinload(Hand.players))
+        .options(selectinload(Hand.players).selectinload(HandPlayer.player))
         .order_by(Hand.start_sec)
     )
 

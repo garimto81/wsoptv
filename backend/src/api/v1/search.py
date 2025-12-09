@@ -76,9 +76,7 @@ async def search(
     facets_data = result.get("facets", {})
     facets = SearchFacets(
         catalogs=facets_data.get("catalog_id", {}),
-        players=facets_data.get("player_names", {}),
-        hand_grades=facets_data.get("grade", {}),
-        years={int(k): v for k, v in facets_data.get("year", {}).items()},
+        series={str(k): v for k, v in facets_data.get("series_id", {}).items()},
     )
 
     total = result.get("total", 0)
