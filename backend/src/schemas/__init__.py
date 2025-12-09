@@ -13,6 +13,15 @@ from .hand import HandResponse, HandListResponse
 from .player import PlayerResponse, PlayerListResponse
 from .search import SearchRequest, SearchResponse, SuggestResponse
 from .common import PaginatedResponse, ApiResponse, ErrorResponse
+from .jellyfin import (
+    JellyfinServerInfo,
+    JellyfinLibrary,
+    JellyfinItem,
+    JellyfinItemListResponse,
+    JellyfinPlaybackInfo,
+    JellyfinContentResponse,
+    JellyfinContentListResponse,
+)
 
 __all__ = [
     # Auth
@@ -46,4 +55,12 @@ __all__ = [
     "PaginatedResponse",
     "ApiResponse",
     "ErrorResponse",
+    # Jellyfin
+    "JellyfinServerInfo",
+    "JellyfinLibrary",
+    "JellyfinItem",
+    "JellyfinItemListResponse",
+    "JellyfinPlaybackInfo",
+    "JellyfinContentResponse",
+    "JellyfinContentListResponse",
 ]

@@ -15,7 +15,7 @@ from .core.config import settings
 from .core.database import init_db
 
 # API Routers
-from .api.v1 import auth, catalogs, contents, search, stream, users
+from .api.v1 import auth, catalogs, contents, jellyfin, search, stream, users
 
 
 @asynccontextmanager
@@ -107,6 +107,11 @@ app.include_router(
     users.router,
     prefix=f"{settings.API_V1_PREFIX}/users",
     tags=["Users"],
+)
+app.include_router(
+    jellyfin.router,
+    prefix=f"{settings.API_V1_PREFIX}/jellyfin",
+    tags=["Jellyfin"],
 )
 
 
