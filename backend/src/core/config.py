@@ -67,12 +67,49 @@ class Settings(BaseSettings):
 
     # NAS / Streaming
     NAS_MOUNT_PATH: str = "/mnt/nas"
+    NAS_UNC_PREFIX: str = "\\\\10.10.100.122\\docker\\GGPNAs"  # DB에 저장된 UNC 경로 prefix
     HLS_SEGMENT_DURATION: int = 6
     HLS_CACHE_PATH: str = "/tmp/hls-cache"
+
+    def convert_nas_path(self, db_path: str) -> str:
+        """
+        DB에 저장된 NAS 경로를 컨테이너 내부 경로로 변환
+
+        예: \\\\10.10.100.122\\docker\\GGPNAs/ARCHIVE/MPP/...
+         -> /mnt/nas/GGPNAs/ARCHIVE/MPP/...
+        """
+        if not db_path:
+            return db_path
+
+        # UNC prefix 제거 및 Linux 경로로 변환
+        path = db_path.replace("\\", "/")
+
+        # 여러 형태의 UNC prefix 처리
+        prefixes = [
+            "//10.10.100.122/docker/GGPNAs",
+            "//10.10.100.122/docker",
+        ]
+
+        for prefix in prefixes:
+            if path.startswith(prefix):
+                relative_path = path[len(prefix):]
+                return f"{self.NAS_MOUNT_PATH}/GGPNAs{relative_path}"
+
+        # 변환 불가시 원본 반환 (로컬 경로일 수 있음)
+        return db_path
 
     # Rate Limiting
     RATE_LIMIT_REQUESTS: int = 100
     RATE_LIMIT_WINDOW_SECONDS: int = 60
+
+    # Jellyfin
+    JELLYFIN_HOST: str = "http://localhost:8096"
+    JELLYFIN_API_KEY: str = ""
+
+    @property
+    def JELLYFIN_AUTH_HEADER(self) -> str:
+        """Jellyfin 10.11+ Authorization header format"""
+        return f'MediaBrowser Token="{self.JELLYFIN_API_KEY}", Client="WSOPTV", Device="Backend", DeviceId="wsoptv-backend-001", Version="1.0.0"'
 
 
 @lru_cache

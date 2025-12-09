@@ -6,7 +6,6 @@
 	let username = $state('');
 	let password = $state('');
 	let confirmPassword = $state('');
-	let displayName = $state('');
 	let error = $state('');
 	let isLoading = $state(false);
 
@@ -20,15 +19,15 @@
 			return;
 		}
 
-		if (password.length < 8) {
-			error = 'Password must be at least 8 characters';
+		if (password.length < 4) {
+			error = 'Password must be at least 4 characters';
 			return;
 		}
 
 		isLoading = true;
 
 		try {
-			await authStore.register(username, password, displayName || undefined);
+			await authStore.register(username, password, confirmPassword);
 			goto('/register/pending');
 		} catch (err: any) {
 			error = err.message || 'Registration failed. Please try again.';
@@ -64,17 +63,9 @@
 			/>
 
 			<Input
-				label="Display Name (Optional)"
-				type="text"
-				placeholder="Name to display"
-				bind:value={displayName}
-				autocomplete="name"
-			/>
-
-			<Input
 				label="Password"
 				type="password"
-				placeholder="At least 8 characters"
+				placeholder="At least 4 characters"
 				bind:value={password}
 				required
 				autocomplete="new-password"
@@ -90,7 +81,7 @@
 			/>
 
 			<div class="notice">
-				<p>⚠️ Admin approval is required after registration.</p>
+				<p>Admin approval is required after registration.</p>
 			</div>
 
 			<Button type="submit" variant="primary" loading={isLoading}>

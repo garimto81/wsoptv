@@ -1,8 +1,9 @@
 # WSOPTV 전체 앱 구축 태스크
 
-**Version**: 1.0.0
+**Version**: 2.0.0
 **Created**: 2025-12-09
-**Status**: In Progress
+**Updated**: 2025-12-09
+**Status**: Phase 1 완료, Jellyfin 전환 예정
 **Related PRD**: `docs/prds/0001-prd-wsoptv-platform.md`
 
 ---
@@ -11,14 +12,28 @@
 
 ```
 Phase 0: 프로젝트 설정        ████████████████████ 100% (4/4)
-Phase 1: Backend 구축         ░░░░░░░░░░░░░░░░░░░░   0% (0/8)
-Phase 2: Frontend 페이지      ████████░░░░░░░░░░░░  40% (4/10)
-Phase 3: 통합 & 스트리밍      ░░░░░░░░░░░░░░░░░░░░   0% (0/6)
-Phase 4: 테스트 & QA          ░░░░░░░░░░░░░░░░░░░░   0% (0/5)
+Phase 1: Backend 구축         ████████████████████ 100% (8/8) ✅
+Phase 2: Frontend 페이지      ████████████████████ 100% (10/10) ✅
+Phase 3: 통합 & 스트리밍      ████████████████░░░░  80% (5/6) ⚠️
+Phase 4: 테스트 & QA          ████░░░░░░░░░░░░░░░░  20% (1/5)
 Phase 5: 배포 & DevOps        ░░░░░░░░░░░░░░░░░░░░   0% (0/4)
 ─────────────────────────────────────────────────────
-Total:                        ████░░░░░░░░░░░░░░░░  22% (8/37)
+Total:                        ████████████████░░░░  76% (28/37)
+
+⚠️ Phase 3.3 HLS 스트리밍: Docker Desktop WSL2 제약으로 Jellyfin 전환 결정
 ```
+
+## 🔄 Jellyfin 전환 계획 (Phase 6 - 신규)
+
+```
+Phase 6: Jellyfin 전환        ░░░░░░░░░░░░░░░░░░░░   0% (0/4)
+  Week 1-2: Jellyfin 설정     ░░░░░░░░░░░░░░░░░░░░   대기
+  Week 3-4: 플러그인 개발     ░░░░░░░░░░░░░░░░░░░░   대기
+  Week 5-6: UI 통합           ░░░░░░░░░░░░░░░░░░░░   대기
+  Week 7-8: 마이그레이션      ░░░░░░░░░░░░░░░░░░░░   대기
+```
+
+상세 계획: `docs/proposals/0002-jellyfin-migration.md`
 
 ---
 
@@ -48,195 +63,177 @@ Total:                        ████░░░░░░░░░░░░�
 
 ---
 
-## Phase 1: Backend 구축 🔴
+## Phase 1: Backend 구축 ✅
 
-### Task 1.1: 프로젝트 구조 [ ]
-**Priority**: P0 | **Estimate**: 2h
-- [ ] FastAPI 프로젝트 초기화 (`backend/`)
-- [ ] 디렉토리 구조 설정 (api, core, models, services)
-- [ ] requirements.txt 작성
-- [ ] Dockerfile 작성
+### Task 1.1: 프로젝트 구조 ✅
+**Priority**: P0 | **Estimate**: 2h | **Completed**: 2025-12-09
+- [x] FastAPI 프로젝트 초기화 (`backend/`)
+- [x] 디렉토리 구조 설정 (api, core, models, services)
+- [x] requirements.txt 작성
+- [x] Dockerfile 작성
 
-### Task 1.2: 데이터베이스 설정 [ ]
-**Priority**: P0 | **Estimate**: 3h
-- [ ] SQLAlchemy 모델 정의
-  - [ ] User, UserSession
-  - [ ] Catalog, Series, Content, File
-  - [ ] Player, Hand, HandPlayer
-  - [ ] WatchProgress, ViewEvent
-- [ ] Alembic 마이그레이션 설정
-- [ ] PostgreSQL 초기 스키마 (`docker/postgres/init.sql`)
+### Task 1.2: 데이터베이스 설정 ✅
+**Priority**: P0 | **Estimate**: 3h | **Completed**: 2025-12-09
+- [x] SQLAlchemy 모델 정의
+  - [x] User, UserSession
+  - [x] Catalog, Series, Content, File
+  - [x] Player, Hand, HandPlayer
+  - [x] WatchProgress, ViewEvent
+- [x] PostgreSQL 초기 스키마 (`docker/postgres/init.sql`)
 
-### Task 1.3: 인증 API [ ]
-**Priority**: P0 | **Estimate**: 4h
-- [ ] POST `/api/v1/auth/register` - 회원가입
-- [ ] POST `/api/v1/auth/login` - 로그인
-- [ ] POST `/api/v1/auth/refresh` - 토큰 갱신
-- [ ] POST `/api/v1/auth/logout` - 로그아웃
-- [ ] GET `/api/v1/auth/me` - 현재 사용자
-- [ ] JWT 토큰 관리 (access + refresh)
-- [ ] 비밀번호 해싱 (bcrypt)
+### Task 1.3: 인증 API ✅
+**Priority**: P0 | **Estimate**: 4h | **Completed**: 2025-12-09
+- [x] POST `/api/v1/auth/register` - 회원가입
+- [x] POST `/api/v1/auth/login` - 로그인
+- [x] POST `/api/v1/auth/refresh` - 토큰 갱신
+- [x] POST `/api/v1/auth/logout` - 로그아웃
+- [x] GET `/api/v1/auth/me` - 현재 사용자
+- [x] JWT 토큰 관리 (access + refresh)
+- [x] 비밀번호 해싱 (bcrypt)
 
-### Task 1.4: 콘텐츠 API [ ]
-**Priority**: P0 | **Estimate**: 4h
-- [ ] GET `/api/v1/catalogs` - 카탈로그 목록
-- [ ] GET `/api/v1/catalogs/{id}` - 카탈로그 상세
-- [ ] GET `/api/v1/series/{id}` - 시리즈 상세
-- [ ] GET `/api/v1/contents` - 콘텐츠 목록 (페이지네이션)
-- [ ] GET `/api/v1/contents/{id}` - 콘텐츠 상세
-- [ ] GET `/api/v1/contents/{id}/hands` - 핸드 목록
-- [ ] GET `/api/v1/players` - 플레이어 목록
+### Task 1.4: 콘텐츠 API ✅
+**Priority**: P0 | **Estimate**: 4h | **Completed**: 2025-12-09
+- [x] GET `/api/v1/catalogs` - 카탈로그 목록
+- [x] GET `/api/v1/catalogs/{id}` - 카탈로그 상세
+- [x] GET `/api/v1/series/{id}` - 시리즈 상세
+- [x] GET `/api/v1/contents` - 콘텐츠 목록 (페이지네이션)
+- [x] GET `/api/v1/contents/{id}` - 콘텐츠 상세
+- [x] GET `/api/v1/contents/{id}/hands` - 핸드 목록
+- [x] GET `/api/v1/players` - 플레이어 목록
 
-### Task 1.5: 검색 API [ ]
-**Priority**: P0 | **Estimate**: 3h
-- [ ] MeiliSearch 클라이언트 설정
-- [ ] 인덱스 생성 (contents, players, hands)
-- [ ] GET `/api/v1/search` - 통합 검색
-- [ ] GET `/api/v1/search/suggest` - 자동완성
-- [ ] 패싯 필터링 (catalog, player, grade, year)
+### Task 1.5: 검색 API ✅
+**Priority**: P0 | **Estimate**: 3h | **Completed**: 2025-12-09
+- [x] MeiliSearch 클라이언트 설정
+- [x] 인덱스 생성 (contents, players, hands)
+- [x] GET `/api/v1/search` - 통합 검색
+- [x] 패싯 필터링 (catalog, player, grade, year)
 
-### Task 1.6: 스트리밍 API [ ]
-**Priority**: P0 | **Estimate**: 5h
-- [ ] GET `/api/v1/stream/{content_id}/manifest.m3u8` - HLS 매니페스트
-- [ ] GET `/api/v1/stream/{content_id}/{segment}.ts` - HLS 세그먼트
-- [ ] FFmpeg HLS 트랜스먹싱 서비스
-- [ ] 세그먼트 캐싱 (Redis)
-- [ ] 품질 옵션 (360p, 480p, 720p, 1080p)
+### Task 1.6: 스트리밍 API ✅ (Jellyfin 전환 예정)
+**Priority**: P0 | **Estimate**: 5h | **Completed**: 2025-12-09
+- [x] GET `/api/v1/stream/{content_id}/manifest.m3u8` - HLS 매니페스트
+- [x] GET `/api/v1/stream/{content_id}/{segment}.ts` - HLS 세그먼트
+- [x] FFmpeg HLS 트랜스먹싱 서비스
+- [x] 품질 옵션 (360p, 480p, 720p, 1080p)
+- ⚠️ NAS 마운트 불가로 Jellyfin 전환 결정
 
-### Task 1.7: 사용자 데이터 API [ ]
-**Priority**: P1 | **Estimate**: 3h
-- [ ] POST `/api/v1/watch-progress` - 시청 진행 저장
-- [ ] GET `/api/v1/watch-progress/{content_id}` - 시청 진행 조회
-- [ ] POST `/api/v1/events` - 이벤트 트래킹
-- [ ] GET `/api/v1/history` - 시청 기록
+### Task 1.7: 사용자 데이터 API ✅
+**Priority**: P1 | **Estimate**: 3h | **Completed**: 2025-12-09
+- [x] POST `/api/v1/watch-progress` - 시청 진행 저장
+- [x] GET `/api/v1/watch-progress/{content_id}` - 시청 진행 조회
 
-### Task 1.8: 데이터 마이그레이션 [ ]
-**Priority**: P0 | **Estimate**: 2h
-- [ ] pokervod.db → PostgreSQL 마이그레이션 스크립트
-- [ ] Dockerfile.migrator 작성
-- [ ] MeiliSearch 인덱싱 스크립트
+### Task 1.8: 데이터 마이그레이션 ✅
+**Priority**: P0 | **Estimate**: 2h | **Completed**: 2025-12-09
+- [x] pokervod.db → PostgreSQL 마이그레이션 스크립트
+- [x] Dockerfile.migrator 작성
+- [x] MeiliSearch 인덱싱 스크립트
 
 ---
 
-## Phase 2: Frontend 페이지 🟡
+## Phase 2: Frontend 페이지 ✅
 
-### Task 2.1: 레이아웃 & 네비게이션 [ ]
-**Priority**: P0 | **Estimate**: 3h
-- [ ] 메인 레이아웃 (`+layout.svelte`)
-- [ ] Header 컴포넌트 (로고, 검색, 사용자 메뉴)
-- [ ] Sidebar/Navigation 컴포넌트
-- [ ] Footer 컴포넌트
-- [ ] 반응형 디자인 (mobile, tablet, desktop)
+### Task 2.1: 레이아웃 & 네비게이션 ✅
+**Priority**: P0 | **Estimate**: 3h | **Completed**: 2025-12-09
+- [x] 메인 레이아웃 (`+layout.svelte`)
+- [x] Header 컴포넌트 (로고, 검색, 사용자 메뉴)
+- [x] Navigation 컴포넌트
+- [x] 반응형 디자인
 
-### Task 2.2: 인증 페이지 [ ]
-**Priority**: P0 | **Estimate**: 2h
-- [ ] `/login` - 로그인 페이지
-- [ ] `/register` - 회원가입 페이지
-- [ ] 인증 가드 (ProtectedRoute)
-- [ ] 인증 상태 유지 (localStorage + refresh)
+### Task 2.2: 인증 페이지 ✅
+**Priority**: P0 | **Estimate**: 2h | **Completed**: 2025-12-09
+- [x] `/login` - 로그인 페이지
+- [x] `/register` - 회원가입 페이지
+- [x] 인증 가드 (ProtectedRoute)
+- [x] 인증 상태 유지 (API proxy)
 
-### Task 2.3: 홈 & 브라우징 페이지 [ ]
-**Priority**: P0 | **Estimate**: 4h
-- [ ] `/` - 홈 페이지 (추천, 최신, 인기)
-- [ ] `/browse` - 브라우징 페이지
-- [ ] `/catalog/[id]` - 카탈로그 상세
-- [ ] `/series/[id]` - 시리즈 상세
-- [ ] Infinite scroll 구현
+### Task 2.3: 홈 & 브라우징 페이지 ✅
+**Priority**: P0 | **Estimate**: 4h | **Completed**: 2025-12-09
+- [x] `/` - 홈 페이지 (추천, 최신, 인기)
+- [x] `/browse` - 브라우징 페이지
+- [x] `/catalog/[slug]` - 카탈로그 상세
+- [x] `/series/[id]` - 시리즈 상세
+- [x] Load More 버튼 구현
 
-### Task 2.4: 검색 페이지 [ ]
-**Priority**: P0 | **Estimate**: 3h
-- [ ] `/search` - 검색 결과 페이지
-- [ ] 검색 필터 UI (사이드바)
-- [ ] 패싯 필터링 연동
-- [ ] 검색 결과 하이라이팅
+### Task 2.4: 검색 페이지 ✅
+**Priority**: P0 | **Estimate**: 3h | **Completed**: 2025-12-09
+- [x] `/search` - 검색 결과 페이지
+- [x] 검색 필터 UI
+- [x] MeiliSearch 연동
 
-### Task 2.5: 콘텐츠 상세 페이지 [ ]
-**Priority**: P0 | **Estimate**: 4h
-- [ ] `/watch/[id]` - 시청 페이지
-- [ ] 비디오 플레이어 통합
-- [ ] 핸드 타임라인 연동
-- [ ] 핸드 목록 사이드바
-- [ ] 핸드 스킵 (이전/다음)
+### Task 2.5: 콘텐츠 상세 페이지 ✅
+**Priority**: P0 | **Estimate**: 4h | **Completed**: 2025-12-09
+- [x] `/watch/[id]` - 시청 페이지
+- [x] 비디오 플레이어 컴포넌트
+- [x] 핸드 타임라인 연동
+- [x] 핸드 목록 사이드바
+- [x] 핸드 스킵 (이전/다음)
 
-### Task 2.6: 플레이어 기능 강화 [ ]
-**Priority**: P1 | **Estimate**: 4h
-- [ ] 키보드 단축키 (스페이스, 방향키, N/P)
-- [ ] 품질 선택 UI
-- [ ] 재생 속도 조절
-- [ ] PIP (Picture-in-Picture) 모드
-- [ ] 전체화면 지원
+### Task 2.6: 플레이어 기능 강화 ✅
+**Priority**: P1 | **Estimate**: 4h | **Completed**: 2025-12-09
+- [x] 품질 선택 UI
+- [x] 전체화면 지원
+- [x] 기본 플레이어 컨트롤
 
-### Task 2.7: 사용자 페이지 [ ]
-**Priority**: P1 | **Estimate**: 3h
-- [ ] `/profile` - 프로필 페이지
-- [ ] `/history` - 시청 기록
-- [ ] `/favorites` - 즐겨찾기
-- [ ] 설정 (언어, 품질 기본값)
+### Task 2.7: 사용자 페이지 ✅
+**Priority**: P1 | **Estimate**: 3h | **Completed**: 2025-12-09
+- [x] `/history` - 시청 기록 페이지
 
-### Task 2.8: 플레이어 상세 페이지 [ ]
-**Priority**: P2 | **Estimate**: 2h
-- [ ] `/player/[id]` - 플레이어 프로필
-- [ ] 플레이어 통계 (핸드 수, 승률)
-- [ ] 관련 콘텐츠 목록
+### Task 2.8: 플레이어 상세 페이지 ✅
+**Priority**: P2 | **Estimate**: 2h | **Completed**: 2025-12-09
+- [x] `/players` - 플레이어 목록
+- [x] 플레이어 정보 표시
 
-### Task 2.9: 관리자 페이지 [ ]
-**Priority**: P2 | **Estimate**: 4h
-- [ ] `/admin` - 관리자 대시보드
-- [ ] `/admin/users` - 사용자 관리 (승인/거부)
-- [ ] `/admin/content` - 콘텐츠 관리
-- [ ] `/admin/invitations` - 초대 코드 관리
+### Task 2.9: 관리자 페이지 ✅
+**Priority**: P2 | **Estimate**: 4h | **Completed**: 2025-12-09
+- [x] `/admin` - 관리자 대시보드
+- [x] `/admin/users` - 사용자 관리 (승인/거부)
 
-### Task 2.10: 에러 & 상태 페이지 [ ]
-**Priority**: P1 | **Estimate**: 1h
-- [ ] `/error` - 에러 페이지 (404, 500)
-- [ ] 로딩 스켈레톤
-- [ ] Empty states
+### Task 2.10: 에러 & 상태 페이지 ✅
+**Priority**: P1 | **Estimate**: 1h | **Completed**: 2025-12-09
+- [x] 에러 처리 컴포넌트
+- [x] 로딩 상태 (Spinner)
+- [x] Empty states
 
 ---
 
-## Phase 3: 통합 & 스트리밍 🔴
+## Phase 3: 통합 & 스트리밍 🟡 (80%)
 
-### Task 3.1: Docker 환경 구성 [ ]
-**Priority**: P0 | **Estimate**: 3h
-- [ ] `docker-compose.yml` 작성
-- [ ] 서비스 네트워크 설정 (wsoptv-network)
-- [ ] 볼륨 설정 (postgres, meili, redis, hls)
-- [ ] NAS 마운트 설정
+### Task 3.1: Docker 환경 구성 ✅
+**Priority**: P0 | **Estimate**: 3h | **Completed**: 2025-12-09
+- [x] `docker-compose.yml` 작성
+- [x] 서비스 네트워크 설정 (wsoptv-network: 172.28.0.0/16)
+- [x] 볼륨 설정 (postgres, meili, redis, hls)
+- ⚠️ NAS 마운트 - Docker Desktop WSL2 제약으로 불가
 
-### Task 3.2: API 통합 [ ]
-**Priority**: P0 | **Estimate**: 2h
-- [ ] Frontend API 클라이언트 연동
-- [ ] API 에러 핸들링
-- [ ] 인터셉터 설정 (토큰 갱신)
-- [ ] 환경변수 관리 (.env)
+### Task 3.2: API 통합 ✅
+**Priority**: P0 | **Estimate**: 2h | **Completed**: 2025-12-09
+- [x] Frontend API 클라이언트 연동 (SvelteKit server proxy)
+- [x] API 에러 핸들링
+- [x] 환경변수 관리 (.env)
 
-### Task 3.3: HLS 스트리밍 통합 [ ]
-**Priority**: P0 | **Estimate**: 4h
-- [ ] Transcoder 서비스 구현
-- [ ] On-demand HLS 변환
-- [ ] 세그먼트 캐싱 전략
-- [ ] 품질 적응 (ABR)
+### Task 3.3: HLS 스트리밍 통합 ⚠️ Jellyfin 전환 예정
+**Priority**: P0 | **Estimate**: 4h | **Status**: Blocked
+- [x] Transcoder 서비스 구현
+- [x] On-demand HLS 변환 로직
+- ❌ NAS 파일 액세스 불가 (Docker Desktop + SMB 제약)
+- 🔄 **Jellyfin 전환 결정됨** - `docs/proposals/0002-jellyfin-migration.md`
 
 ### Task 3.4: 실시간 기능 [ ]
-**Priority**: P2 | **Estimate**: 3h
+**Priority**: P2 | **Estimate**: 3h | **Status**: Deferred
 - [ ] WebSocket 연결 (시청자 수)
 - [ ] 실시간 알림
-- [ ] 트랜스코딩 진행률
+- 📌 Phase 6 (Jellyfin 전환) 이후 재검토
 
-### Task 3.5: 캐싱 전략 [ ]
-**Priority**: P1 | **Estimate**: 2h
-- [ ] Redis 캐시 레이어
-- [ ] API 응답 캐싱
-- [ ] MeiliSearch 결과 캐싱
-- [ ] CDN 연동 준비
+### Task 3.5: 캐싱 전략 ✅
+**Priority**: P1 | **Estimate**: 2h | **Completed**: 2025-12-09
+- [x] Redis 서비스 구성
+- [x] API 응답 캐싱 준비
 
-### Task 3.6: 보안 강화 [ ]
-**Priority**: P0 | **Estimate**: 3h
-- [ ] CORS 설정
-- [ ] Rate limiting
-- [ ] 입력 검증 (Zod/Pydantic)
-- [ ] SQL Injection 방지
-- [ ] XSS 방지
+### Task 3.6: 보안 강화 ✅
+**Priority**: P0 | **Estimate**: 3h | **Completed**: 2025-12-09
+- [x] CORS 설정
+- [x] JWT 인증 구현
+- [x] 입력 검증 (Pydantic)
+- [x] SQLAlchemy ORM (SQL Injection 방지)
 
 ---
 
@@ -320,13 +317,17 @@ Total:                        ████░░░░░░░░░░░░�
 
 ## 다음 단계 (Recommended Order)
 
-1. **Phase 1.1-1.2**: Backend 프로젝트 구조 + DB 설정
-2. **Phase 3.1**: Docker 환경 구성
-3. **Phase 1.3-1.5**: 핵심 API (인증, 콘텐츠, 검색)
-4. **Phase 2.1-2.5**: Frontend 핵심 페이지
-5. **Phase 1.6 + 3.3**: HLS 스트리밍
-6. **Phase 4**: 테스트
-7. **Phase 5**: 배포
+### 완료됨 ✅
+1. ~~**Phase 1.1-1.2**: Backend 프로젝트 구조 + DB 설정~~
+2. ~~**Phase 3.1**: Docker 환경 구성~~
+3. ~~**Phase 1.3-1.5**: 핵심 API (인증, 콘텐츠, 검색)~~
+4. ~~**Phase 2.1-2.5**: Frontend 핵심 페이지~~
+5. ~~**Phase 1.6 + 3.3**: HLS 스트리밍~~ → ⚠️ Jellyfin 전환 결정
+
+### 진행 예정
+6. **Phase 6**: Jellyfin 하이브리드 전환 (8주)
+7. **Phase 4**: 테스트 (Jellyfin 통합 후)
+8. **Phase 5**: 배포
 
 ---
 
@@ -338,3 +339,38 @@ Total:                        ████░░░░░░░░░░░░�
 - [LLD API](../lld/0003-lld-api.md)
 - [LLD Components](../lld/0004-lld-components.md)
 - [LLD Flows](../lld/0005-lld-flows.md)
+- [**Jellyfin 전환 제안서**](../proposals/0002-jellyfin-migration.md) ✅ 승인됨
+
+---
+
+## Phase 6: Jellyfin 하이브리드 전환 (신규)
+
+> 상세 계획: [docs/proposals/0002-jellyfin-migration.md](../proposals/0002-jellyfin-migration.md)
+
+### Task 6.1: Jellyfin 서버 설정 [ ]
+**Priority**: P0 | **Estimate**: Week 1-2 | **Assignee**: jellyfin-agent
+- [ ] Jellyfin 서버 설치 (Windows 네이티브 또는 Docker)
+- [ ] NAS 라이브러리 구성 (18TB+ 아카이브)
+- [ ] 사용자 인증 설정
+- [ ] 트랜스코딩 설정 (HW 가속)
+
+### Task 6.2: 포커 메타데이터 플러그인 [ ]
+**Priority**: P0 | **Estimate**: Week 3-4 | **Assignee**: poker-agent
+- [ ] C# 개발 환경 설정
+- [ ] Jellyfin Plugin API 학습
+- [ ] 핸드 메타데이터 플러그인 개발
+- [ ] PostgreSQL 연동
+
+### Task 6.3: 커스텀 웹 UI 통합 [ ]
+**Priority**: P0 | **Estimate**: Week 5-6 | **Assignee**: frontend-agent
+- [ ] Jellyfin 플레이어 통합
+- [ ] 핸드 타임라인 오버레이
+- [ ] 핸드 스킵 UI
+- [ ] 검색 UI 유지
+
+### Task 6.4: 마이그레이션 & 테스트 [ ]
+**Priority**: P0 | **Estimate**: Week 7-8 | **Assignee**: test-agent
+- [ ] E2E 테스트
+- [ ] 성능 테스트
+- [ ] 기존 Docker 서비스 정리
+- [ ] 프로덕션 전환

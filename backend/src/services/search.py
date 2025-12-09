@@ -21,9 +21,9 @@ class SearchService:
             settings.MEILI_MASTER_KEY,
         )
         self._indexes = {
-            "contents": "wsoptv_contents",
-            "players": "wsoptv_players",
-            "hands": "wsoptv_hands",
+            "contents": "contents",
+            "players": "players",
+            "hands": "hands",
         }
 
     async def search(
@@ -63,7 +63,7 @@ class SearchService:
                 "offset": (page - 1) * limit,
                 "limit": limit,
                 "attributesToHighlight": ["title", "description"],
-                "facets": ["catalog_id", "player_names", "grade", "year"],
+                "facets": ["catalog_id", "series_id"],
             }
 
             if filter_str:

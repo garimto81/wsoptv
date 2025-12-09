@@ -66,15 +66,15 @@ export const authStore = {
 		return user;
 	},
 
-	async register(username: string, password: string, displayName?: string) {
-		const user = await api.post<User>('/auth/register', {
+	async register(username: string, password: string, passwordConfirm: string) {
+		// 회원가입은 pending 상태로 생성되므로 인증 상태를 설정하지 않음
+		// 로그인은 관리자 승인 후에만 가능
+		const response = await api.post<{ user: User; message: string }>('/auth/register', {
 			username,
 			password,
-			displayName
+			passwordConfirm
 		});
-		state.user = user;
-		state.isAuthenticated = true;
-		return user;
+		return response;
 	},
 
 	async logout() {

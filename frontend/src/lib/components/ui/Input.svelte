@@ -1,9 +1,10 @@
 <script lang="ts">
 	import type { HTMLInputAttributes } from 'svelte/elements';
 
-	interface Props extends HTMLInputAttributes {
+	interface Props extends Omit<HTMLInputAttributes, 'value'> {
 		label?: string;
 		error?: string;
+		value?: string;
 	}
 
 	let {
@@ -11,6 +12,7 @@
 		error,
 		id,
 		type = 'text',
+		value = $bindable(''),
 		...restProps
 	}: Props = $props();
 
@@ -28,6 +30,7 @@
 		class="input"
 		aria-invalid={!!error}
 		aria-describedby={error ? `${inputId}-error` : undefined}
+		bind:value
 		{...restProps}
 	/>
 

@@ -11,7 +11,7 @@
 |------|-----|
 | **Agent ID** | `orchestrator` |
 | **Level** | 0 |
-| **Managed Agents** | auth-domain, content-domain, stream-domain, search-domain |
+| **Managed Agents** | auth-domain, content-domain, stream-domain, search-domain, migration-domain, jellyfin-domain |
 | **Scope** | 프로젝트 전체 |
 
 ---
@@ -61,6 +61,8 @@
 | "콘텐츠", "핸드", "타임라인", "목록" | → content-domain |
 | "스트리밍", "HLS", "트랜스코딩" | → stream-domain |
 | "검색", "MeiliSearch", "자동완성" | → search-domain |
+| "마이그레이션", "동기화", "데이터 전송" | → migration-domain |
+| "Jellyfin", "라이브러리", "미디어 서버" | → jellyfin-domain |
 | "플레이어", "비디오", "UI" | → content-domain + stream-domain |
 
 ---

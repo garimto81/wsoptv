@@ -46,10 +46,8 @@ class SearchResultItem(BaseModel):
 class SearchFacets(BaseModel):
     """검색 패싯"""
 
-    catalogs: dict[str, int]
-    players: dict[str, int]
-    hand_grades: dict[str, int] = Field(alias="handGrades")
-    years: dict[int, int]
+    catalogs: dict[str, int] = Field(default_factory=dict)
+    series: dict[str, int] = Field(default_factory=dict)
 
     class Config:
         populate_by_name = True
