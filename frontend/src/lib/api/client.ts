@@ -11,10 +11,11 @@ interface ApiResponse<T> {
 	message?: string;
 }
 
-interface ApiError {
+export interface ApiError {
 	code: string;
 	message: string;
 	detail?: unknown;
+	status?: number;
 }
 
 class ApiClient {
@@ -44,6 +45,18 @@ class ApiClient {
 				code: 'UNKNOWN_ERROR',
 				message: 'An unknown error occurred'
 			}));
+			error.status = response.status;
+
+			// Handle 401 Unauthorized - redirect to login
+			if (response.status === 401 && typeof window !== 'undefined') {
+				const currentPath = window.location.pathname;
+				// Don't redirect if already on login/register pages
+				if (!currentPath.startsWith('/login') && !currentPath.startsWith('/register')) {
+					window.location.href = `/login?redirect=${encodeURIComponent(currentPath)}`;
+					return new Promise(() => {}); // Never resolve, page is redirecting
+				}
+			}
+
 			throw error;
 		}
 
