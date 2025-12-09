@@ -66,11 +66,11 @@ export const authStore = {
 		return user;
 	},
 
-	async register(username: string, password: string, displayName?: string) {
+	async register(username: string, password: string, passwordConfirm: string) {
 		const user = await api.post<User>('/auth/register', {
 			username,
 			password,
-			displayName
+			passwordConfirm
 		});
 		state.user = user;
 		state.isAuthenticated = true;

@@ -72,7 +72,7 @@ async def register(
     user = User(
         username=request.username,
         password_hash=get_password_hash(request.password),
-        display_name=request.display_name or request.username,
+        display_name=request.username,
         status="pending",
         role="user",
     )
