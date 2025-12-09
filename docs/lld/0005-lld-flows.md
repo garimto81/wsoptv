@@ -1,6 +1,6 @@
 # LLD: Flows (시퀀스 다이어그램)
 
-**Version**: 1.0.0 | **Master**: [0001-lld-wsoptv-platform.md](./0001-lld-wsoptv-platform.md)
+**Version**: 2.0.0 | **Master**: [0001-lld-wsoptv-platform.md](./0001-lld-wsoptv-platform.md)
 
 ---
 
@@ -429,3 +429,4 @@ sequenceDiagram
 | Version | Date | Changes |
 |---------|------|---------|
 | 1.0.0 | 2025-12-09 | 초기 플로우 다이어그램 |
+| 2.0.0 | 2025-12-09 | 보안/로직 이슈 수정: 권한 검증, Optimistic Locking (#4, #7, #31) |
