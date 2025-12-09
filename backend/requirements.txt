@@ -19,7 +19,7 @@ pydantic-settings==2.7.0
 email-validator==2.2.0
 
 # Search
-meilisearch==0.31.7
+meilisearch==0.31.6
 
 # Cache & Queue
 redis==5.2.1

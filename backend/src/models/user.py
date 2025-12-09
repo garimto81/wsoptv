@@ -173,7 +173,7 @@ class ViewEvent(Base):
         nullable=False,
     )
     position_sec: Mapped[int] = mapped_column(Integer, nullable=False)
-    metadata: Mapped[str | None] = mapped_column(Text, nullable=True)  # JSON string
+    event_metadata: Mapped[str | None] = mapped_column(Text, nullable=True)  # JSON string
 
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),

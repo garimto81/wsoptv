@@ -1,2 +1,2 @@
-export { authStore } from './auth';
-export type { User } from './auth';
+export { authStore } from './auth.svelte';
+export type { User } from './auth.svelte';
