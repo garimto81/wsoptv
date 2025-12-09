@@ -1,0 +1,6 @@
+# Infrastructure Package
+
+인프라 레이어 패키지
+- event-bus.ts: 이벤트 버스
+- circuit-breaker.ts: 회로 차단기
+- metrics.ts: 메트릭 수집

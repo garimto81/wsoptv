@@ -1,0 +1,6 @@
+# Shared Utilities
+
+순수 유틸리티 함수 폴더
+- formatTime, debounce, cn 등
+- 부작용 없는 순수 함수
+- 도메인 독립적
