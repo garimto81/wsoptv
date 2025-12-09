@@ -100,7 +100,10 @@ services:
       NAS_MOUNT_PATH: /mnt/nas
       HLS_CACHE_PATH: /app/hls-cache
     volumes:
-      - ${NAS_PATH:-Z:}:/mnt/nas:ro
+      - type: bind
+        source: ${NAS_LOCAL_PATH:-//10.10.100.122/docker/GGPNAs}
+        target: /mnt/nas
+        read_only: true
       - hls-cache:/app/hls-cache
     ports:
       - "8001:8001"

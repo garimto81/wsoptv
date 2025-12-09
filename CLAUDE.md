@@ -2,7 +2,7 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
-**Version**: 6.0.0 | **Context**: Windows, PowerShell
+**Version**: 6.1.0 | **Context**: Windows, PowerShell
 
 ---
 
@@ -25,10 +25,21 @@ WSOPTV는 18TB+ 포커 방송 아카이브를 위한 초대 기반 VOD 스트리
 ```
 Frontend :3000 ──▶ Backend :8001 ──▶ PostgreSQL :5433
 (SvelteKit)        (FastAPI)        MeiliSearch :7700
-                                    Redis :6379
+                       │            Redis :6379
+                       └──▶ Jellyfin :8096 (Windows Native)
 ```
 
 **Data Flow**: `NAS(SMB) → archive-analyzer → pokervod.db → Backend → Frontend`
+
+### Data Models
+
+| Model | Description | Relations |
+|-------|-------------|-----------|
+| `User` | 사용자 계정 | → UserSession, WatchProgress |
+| `Catalog` | 최상위 카탈로그 | → Series |
+| `Series` | 시리즈/시즌 | → Content |
+| `Content` | VOD 콘텐츠 | → File, Hand |
+| `Hand` | 포커 핸드 | → HandPlayer, Player |
 
 ---
 
@@ -55,6 +66,12 @@ Orchestrator → Domain Agent → Block → AGENT_RULES.md
 2. .claude/agents/{domain}-domain.md   # 도메인 규칙
 3. apps/web/features/{domain}/AGENT_RULES.md  # 블럭 제약사항 (해당 시)
 ```
+
+---
+
+## 핵심 규칙
+
+> **전역 규칙 적용**: [상위 CLAUDE.md](../CLAUDE.md) 참조
 
 ---
 
@@ -95,9 +112,11 @@ npm run lint                              # ESLint
 
 ```powershell
 cd D:\AI\claude01\wsoptv\apps\web
-npx playwright test                       # 전체 테스트
-npx playwright test e2e/specs/auth/       # 도메인별 테스트
-npx playwright test --project=chromium    # 브라우저 지정
+npx playwright test                            # 전체 테스트
+npx playwright test e2e/specs/auth/            # 도메인별 테스트
+npx playwright test e2e/performance/           # 성능 테스트 (Web Vitals)
+npx playwright test e2e/visual/                # 시각적 회귀 테스트
+npx playwright test --project=chromium         # 브라우저 지정
 ```
 
 ---
@@ -150,6 +169,8 @@ NAS_LOCAL_PATH=//10.10.100.122/docker/GGPNAs
 | GET | `/api/v1/contents/{id}` | 콘텐츠 상세 + 핸드 타임라인 |
 | GET | `/api/v1/search` | MeiliSearch 통합 검색 |
 | GET | `/api/v1/stream/{id}/playlist.m3u8` | HLS 스트리밍 |
+| GET | `/api/v1/jellyfin/items` | Jellyfin 라이브러리 아이템 |
+| GET | `/api/v1/jellyfin/stream/{id}` | Jellyfin 스트림 URL |
 
 API 문서: `http://localhost:8001/docs`
 
@@ -174,12 +195,17 @@ API 문서: `http://localhost:8001/docs`
 **상세**: `tasks/0002-migration-pokervod-to-wsoptv.md`
 **Agent**: `.claude/agents/migration-domain.md`
 
-### Pending: Jellyfin 전환 (Phase 6)
+### In Progress: Jellyfin 전환 (Phase 6)
 
-Docker Desktop WSL2의 Windows SMB 마운트 제한 해결을 위해 Jellyfin 하이브리드 아키텍처로 전환 예정
+Docker Desktop WSL2의 Windows SMB 마운트 제한 해결을 위해 Jellyfin 하이브리드 아키텍처로 전환 중
 
 - **Jellyfin**: Windows Native 설치 (NAS SMB 직접 액세스)
 - **Docker 서비스**: PostgreSQL, MeiliSearch, Redis, Backend, Frontend (유지)
+
+**구현 완료**:
+- `backend/src/api/v1/jellyfin.py` - Jellyfin API 라우터
+- `backend/src/services/jellyfin.py` - Jellyfin 서비스
+- `frontend/src/lib/api/jellyfin.ts` - 프론트엔드 API 클라이언트
 
 **상세**: `docs/proposals/0002-jellyfin-migration.md`
 
