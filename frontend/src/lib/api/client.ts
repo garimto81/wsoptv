@@ -40,6 +40,17 @@ class ApiClient {
 		});
 
 		if (!response.ok) {
+			// 401 Unauthorized - 로그인 페이지로 리다이렉트 (브라우저 환경에서만)
+			if (response.status === 401 && typeof window !== 'undefined') {
+				const currentPath = window.location.pathname;
+				// 이미 로그인 페이지가 아닌 경우에만 리다이렉트
+				if (!currentPath.startsWith('/login') && !currentPath.startsWith('/register')) {
+					window.location.href = `/login?redirect=${encodeURIComponent(currentPath)}`;
+					// 리다이렉트 중 추가 처리 방지
+					throw { code: 'REDIRECT', message: 'Redirecting to login...' };
+				}
+			}
+
 			const error: ApiError = await response.json().catch(() => ({
 				code: 'UNKNOWN_ERROR',
 				message: 'An unknown error occurred'
