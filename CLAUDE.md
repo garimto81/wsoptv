@@ -2,7 +2,7 @@
 
 This file provides guidance to Claude Code when working with code in this repository.
 
-**Version**: 1.0.0 | **Context**: Windows, PowerShell, Docker
+**Version**: 2.0.0 | **Context**: Windows, PowerShell, Docker
 
 ---
 
@@ -228,5 +228,40 @@ API 문서: `http://localhost:8001/docs`
 | 문서 | 위치 |
 |------|------|
 | PRD | `docs/prds/0001-prd-wsoptv-platform.md` |
+| LLD Master | `docs/lld/0001-lld-wsoptv-platform.md` |
+| LLD Modules | `docs/lld/0002-lld-modules.md` |
+| LLD API | `docs/lld/0003-lld-api.md` |
+| LLD Components | `docs/lld/0004-lld-components.md` |
+| LLD Flows | `docs/lld/0005-lld-flows.md` |
 | API Docs | `http://localhost:8001/docs` |
 | DB Schema | `docker/postgres/init.sql` |
+
+---
+
+## Token Management (토큰 관리)
+
+LLD 문서가 5개로 분할되어 있습니다. 토큰 효율을 위해 다음 규칙을 따릅니다:
+
+### 문서 참조 우선순위
+
+| 질문 유형 | 참조 문서 |
+|-----------|-----------|
+| 전체 구조 파악 | `0001-lld-wsoptv-platform.md` (마스터) |
+| 패키지/타입 구현 | `0002-lld-modules.md` |
+| API 엔드포인트 | `0003-lld-api.md` |
+| UI 컴포넌트 | `0004-lld-components.md` |
+| 시퀀스/플로우 | `0005-lld-flows.md` |
+
+### 토큰 절약 전략
+
+```
+1. 마스터 문서 먼저 확인 → 필요한 서브 문서만 참조
+2. 전체 문서 읽기 대신 필요한 섹션만 검색
+3. 관련 이슈 번호로 문서 내 변경사항 추적
+```
+
+### 문서 버전
+
+모든 LLD 문서는 v2.0.0으로 통일 (2025-12-09)
+- 보안/성능/로직/스타일 이슈 32건 반영
+- GitHub Issues: #1 ~ #32

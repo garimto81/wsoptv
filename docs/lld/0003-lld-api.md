@@ -1,6 +1,6 @@
 # LLD: API Specification
 
-**Version**: 1.0.0 | **Master**: [0001-lld-wsoptv-platform.md](./0001-lld-wsoptv-platform.md)
+**Version**: 2.0.0 | **Master**: [0001-lld-wsoptv-platform.md](./0001-lld-wsoptv-platform.md)
 
 ---
 
@@ -65,7 +65,7 @@
 
 ### POST /auth/login
 
-로그인
+로그인 - httpOnly 쿠키 기반 (#1)
 
 **Request**
 ```json
@@ -86,10 +86,69 @@
       "role": "user",
       "status": "approved"
     },
-    "token": "eyJhbGc...",
     "expiresAt": "2025-12-16T10:00:00Z"
   }
 }
+```
+
+**Response Headers** (토큰은 쿠키로 전달 #1)
+```
+Set-Cookie: access_token=eyJhbGc...; HttpOnly; Secure; SameSite=Strict; Path=/; Max-Age=900
+Set-Cookie: refresh_token=eyJhbGc...; HttpOnly; Secure; SameSite=Strict; Path=/api/v1/auth; Max-Age=604800
+```
+
+---
+
+### POST /auth/refresh
+
+Access Token 갱신 (#12)
+
+**Request**: 없음 (Refresh Token은 httpOnly 쿠키)
+
+**Response 200**
+```json
+{
+  "data": {
+    "expiresAt": "2025-12-09T12:15:00Z"
+  }
+}
+```
+
+**Response Headers**
+```
+Set-Cookie: access_token=eyJuZXc...; HttpOnly; Secure; SameSite=Strict; Path=/; Max-Age=900
+```
+
+**Errors**
+| Code | HTTP | 설명 |
+|------|------|------|
+| `AUTH_TOKEN_EXPIRED` | 401 | Refresh Token 만료 |
+| `AUTH_TOKEN_INVALID` | 401 | 유효하지 않은 토큰 |
+
+---
+
+### POST /auth/logout
+
+로그아웃 - 토큰 무효화 (#24)
+
+**Response 200**
+```json
+{
+  "data": {
+    "message": "로그아웃되었습니다"
+  }
+}
+```
+
+**동작**
+1. Access Token을 Blacklist에 추가 (Redis, TTL = 토큰 잔여 시간)
+2. Refresh Token 무효화
+3. 쿠키 삭제
+
+**Response Headers**
+```
+Set-Cookie: access_token=; HttpOnly; Secure; SameSite=Strict; Path=/; Max-Age=0
+Set-Cookie: refresh_token=; HttpOnly; Secure; SameSite=Strict; Path=/api/v1/auth; Max-Age=0
 ```
 
 **Errors**
@@ -404,6 +463,33 @@ stream_2.m3u8
 | `CONTENT_NOT_FOUND` | 404 | 콘텐츠 없음 |
 | `STREAM_NOT_READY` | 503 | 트랜스코딩 중 |
 | `STREAM_SOURCE_ERROR` | 500 | NAS 접근 실패 |
+| `STREAM_ACCESS_DENIED` | 403 | 스트림 접근 권한 없음 (#4) |
+
+---
+
+### GET /stream/{contentId}/status
+
+트랜스코딩 상태 조회 (#16)
+
+**Response 200**
+```json
+{
+  "data": {
+    "status": "processing",
+    "progress": 45,
+    "estimatedTime": 120,
+    "error": null
+  }
+}
+```
+
+**Status 값**
+| Status | 설명 |
+|--------|------|
+| `pending` | 대기 중 |
+| `processing` | 트랜스코딩 중 |
+| `completed` | 완료 |
+| `failed` | 실패 |
 
 ---
 
@@ -411,16 +497,19 @@ stream_2.m3u8
 
 ### POST /progress
 
-시청 진행률 저장 (🔒 인증 필요)
+시청 진행률 저장 (🔒 인증 필요) - Optimistic Locking (#7)
 
 **Request**
 ```json
 {
   "contentId": 101,
   "progressSec": 1800,
-  "durationSec": 7200
+  "durationSec": 7200,
+  "version": 5
 }
 ```
+
+> `version`: Race Condition 방지. 클라이언트가 알고 있는 마지막 버전. 일치하지 않으면 409 반환.
 
 **Response 200**
 ```json
@@ -430,10 +519,16 @@ stream_2.m3u8
     "progressSec": 1800,
     "durationSec": 7200,
     "completed": false,
+    "version": 6,
     "updatedAt": "2025-12-09T12:00:00Z"
   }
 }
 ```
+
+**Errors**
+| Code | HTTP | 설명 |
+|------|------|------|
+| `PROGRESS_VERSION_CONFLICT` | 409 | 버전 충돌 (Race Condition) (#7) |
 
 ---
 
@@ -535,3 +630,4 @@ stream_2.m3u8
 | Version | Date | Changes |
 |---------|------|---------|
 | 1.0.0 | 2025-12-09 | 초기 API 스펙 |
+| 2.0.0 | 2025-12-09 | 보안/로직 이슈 수정: httpOnly 쿠키, Refresh Token, 토큰 Blacklist, Optimistic Locking, 트랜스코딩 상태 API (#1, #7, #12, #16, #24) |

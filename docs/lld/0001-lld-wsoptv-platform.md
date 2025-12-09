@@ -77,7 +77,10 @@ graph LR
 
 | 항목 | 내용 |
 |------|------|
-| 방식 | JWT (HS256, 7일) |
+| 방식 | JWT (HS256) + httpOnly 쿠키 (#1) |
+| Access Token | 15분 (prod) / 24시간 (dev) |
+| Refresh Token | 7일 (prod) / 30일 (dev) (#12) |
+| 비밀번호 | bcrypt, cost=12 (#2) |
 | 가입 | username + password → pending 상태 |
 | 승인 | Admin 수동 승인 → approved |
 | 상태 | `pending` / `approved` / `rejected` / `suspended` |
@@ -112,7 +115,7 @@ graph LR
 
 | 그룹 | 엔드포인트 수 | 인증 | 상세 |
 |------|-------------|------|------|
-| Auth | 3 | 일부 | [0003-lld-api.md#auth](./0003-lld-api.md#1-auth) |
+| Auth | 5 | 일부 | [0003-lld-api.md#1-auth](./0003-lld-api.md#1-auth) |
 | Catalogs | 2 | ✓ | [0003-lld-api.md#catalogs](./0003-lld-api.md#2-catalogs) |
 | Contents | 4 | ✓ | [0003-lld-api.md#contents](./0003-lld-api.md#3-contents) |
 | Search | 1 | ✓ | [0003-lld-api.md#search](./0003-lld-api.md#4-search) |
@@ -141,13 +144,15 @@ graph LR
 
 ## 7. 에러 코드 요약
 
-| Code | HTTP | 설명 |
-|------|------|------|
-| `AUTH_INVALID_CREDENTIALS` | 401 | 잘못된 인증 정보 |
-| `AUTH_PENDING_APPROVAL` | 403 | 승인 대기 중 |
-| `CONTENT_NOT_FOUND` | 404 | 콘텐츠 없음 |
-| `STREAM_NOT_READY` | 503 | 트랜스코딩 중 |
-| `RATE_LIMIT_EXCEEDED` | 429 | 요청 한도 초과 |
+> 전체 에러 코드 목록은 [0003-lld-api.md#에러-코드-전체-목록](./0003-lld-api.md#에러-코드-전체-목록) 참조 (#18)
+
+| Category | Codes | HTTP |
+|----------|-------|------|
+| **Auth** | `AUTH_INVALID_CREDENTIALS`, `AUTH_PENDING_APPROVAL`, `AUTH_TOKEN_EXPIRED` | 401, 403 |
+| **Content** | `CONTENT_NOT_FOUND`, `SERIES_NOT_FOUND`, `CATALOG_NOT_FOUND` | 404 |
+| **Stream** | `STREAM_NOT_READY`, `STREAM_SOURCE_ERROR`, `STREAM_ACCESS_DENIED` | 503, 500, 403 |
+| **Rate Limit** | `RATE_LIMIT_EXCEEDED` | 429 |
+| **Validation** | `VALIDATION_ERROR`, `PROGRESS_VERSION_CONFLICT` | 400, 409 |
 
 ## 8. 기술 스택
 
@@ -170,3 +175,4 @@ graph LR
 |---------|------|---------|
 | 1.0.0 | 2025-12-09 | 초기 LLD (단일 문서) |
 | 2.0.0 | 2025-12-09 | 마스터 + 서브 문서 분할 |
+| 2.1.0 | 2025-12-09 | 보안/성능/로직/스타일 이슈 32건 수정 (#1-#32) |

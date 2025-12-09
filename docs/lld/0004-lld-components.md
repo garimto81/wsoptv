@@ -1,6 +1,6 @@
 # LLD: Components (Svelte 컴포넌트 상세)
 
-**Version**: 1.0.0 | **Master**: [0001-lld-wsoptv-platform.md](./0001-lld-wsoptv-platform.md)
+**Version**: 2.0.0 | **Master**: [0001-lld-wsoptv-platform.md](./0001-lld-wsoptv-platform.md)
 
 ---
 
@@ -866,3 +866,4 @@ Netflix 스타일 스킵 버튼 오버레이.
 | Version | Date | Changes |
 |---------|------|---------|
 | 1.0.0 | 2025-12-09 | 초기 컴포넌트 설계 |
+| 2.0.0 | 2025-12-09 | 보안/로직 이슈 수정: httpOnly 쿠키, 통합 타입, 하이라이트 모드 (#1, #17, #26, #31) |
