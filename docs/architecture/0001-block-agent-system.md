@@ -1,6 +1,6 @@
 # Architecture: Block Agent System
 
-**Version**: 1.0.0 | **Date**: 2025-12-09 | **Status**: Draft
+**Version**: 2.0.0 | **Date**: 2025-12-09 | **Status**: Draft
 
 > 로직 무결성과 앱 관리 최적화를 위한 블럭화 + 에이전트 시스템 아키텍처
 
@@ -9,9 +9,27 @@
 ## 목차
 
 1. [개요](#1-개요)
+   - 1.1 목적
+   - 1.2 설계 원칙
+   - 1.3 아키텍처 개요
+   - **1.4 AI 컨텍스트 최적화** ← NEW
 2. [블럭 정의](#2-블럭-정의)
+   - 2.1 블럭 구조
+   - 2.2 도메인별 블럭 맵
+   - 2.3 블럭 의존성 그래프
+   - **2.4 Vertical Slicing 패턴** ← NEW
+   - **2.5 블럭 사이즈 가이드** ← NEW
 3. [에이전트 시스템](#3-에이전트-시스템)
+   - 3.1 에이전트 계층 구조
+   - 3.2 에이전트 인터페이스
+   - 3.3 도메인 에이전트 상세
+   - 3.4 에이전트-블럭 매핑 테이블
+   - **3.5 Agent Rules 파일** ← NEW
 4. [오케스트레이션 패턴](#4-오케스트레이션-패턴)
+   - 4.1 채택 패턴
+   - 4.2 워크플로우 예시
+   - 4.3 병렬 처리 패턴
+   - **4.4 Conductor 워크플로우** ← NEW
 5. [통신 프로토콜](#5-통신-프로토콜)
 6. [에러 처리 및 복구](#6-에러-처리-및-복구)
 7. [구현 가이드](#7-구현-가이드)
@@ -67,6 +85,74 @@
     │ • Token     │       │ • Search    │       │ • Deliver   │
     │ • Session   │       │ • Cache     │       │ • Monitor   │
     └─────────────┘       └─────────────┘       └─────────────┘
+```
+
+### 1.4 AI 컨텍스트 최적화
+
+블럭화가 필요한 기술적 근거입니다.
+
+#### 1.4.1 문제 진단
+
+앱의 볼륨이 커질수록 AI의 퍼포먼스가 급락하는 현상은 **기술적 한계**에 기인합니다:
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│                    AI BOTTLENECKS                            │
+├─────────────────────────────────────────────────────────────┤
+│                                                              │
+│  1. Context Pollution (컨텍스트 오염)                        │
+│     ────────────────────────────────────────────────────     │
+│     무관한 코드가 AI의 추론을 방해합니다.                     │
+│     프론트엔드 작업 시 백엔드 설정 파일이 노이즈가 되어       │
+│     환각(Hallucination)을 유발합니다.                        │
+│                                                              │
+│  2. Attention Dilution (주의력 분산)                         │
+│     ────────────────────────────────────────────────────     │
+│     최신 LLM이 1M 토큰을 처리한다고 해도, '집중력'은          │
+│     입력량이 늘어날수록 떨어집니다.                           │
+│     (Lost-in-the-Middle 현상)                                │
+│                                                              │
+│  3. Scale Threshold (규모 임계점)                            │
+│     ────────────────────────────────────────────────────     │
+│     "전체를 다 보고 알아서 고쳐줘" 방식은                     │
+│     파일 50개+ 규모부터 사실상 불가능합니다.                  │
+│                                                              │
+└─────────────────────────────────────────────────────────────┘
+```
+
+#### 1.4.2 블럭화 효과
+
+| Before (단일 컨텍스트) | After (블럭화) |
+|------------------------|----------------|
+| 전체 코드베이스 로드 (500+ 파일) | 해당 블럭만 로드 (15~30 파일) |
+| 무관한 코드로 인한 환각 | 관련 코드만 집중 분석 |
+| AI 응답 시간 10초+ | AI 응답 시간 2~3초 |
+| 오류율 높음 | 오류율 현저히 감소 |
+
+```
+                    AI Performance vs Codebase Size
+
+    Error Rate
+    │
+    │                                      ╱ Without Blocks
+    │                                   ╱
+    │                                ╱
+    │                             ╱
+    │                          ╱
+    │                       ╱
+    │                    ╱
+    │                 ╱───────────────── With Blocks
+    │              ╱ ╱
+    │           ╱  ╱
+    │        ╱   ╱
+    │     ╱    ╱
+    │  ╱     ╱
+    │╱──────┴──────────────────────────────────────
+    └──────────────────────────────────────────────▶
+         50      100     200     500    1000   Files
+              ↑
+         Threshold
+         (블럭화 권장 시점)
 ```
 
 ---
@@ -280,6 +366,144 @@ graph TD
     CQ -->|콘텐츠 정보| SR
     CTL -->|타임라인| SD
 ```
+
+### 2.4 Vertical Slicing 패턴
+
+기존 계층형 구조에서 기능형 구조로 전환하는 패턴입니다.
+
+#### 2.4.1 기존 계층형 (Horizontal Layers)
+
+```
+apps/web/
+├── components/          # 모든 컴포넌트
+│   ├── VideoPlayer.svelte
+│   ├── SearchBar.svelte
+│   ├── AuthForm.svelte
+│   └── ...
+├── hooks/               # 모든 훅
+│   ├── usePlayer.ts
+│   ├── useSearch.ts
+│   ├── useAuth.ts
+│   └── ...
+├── stores/              # 모든 스토어
+│   ├── playerStore.ts
+│   ├── searchStore.ts
+│   ├── authStore.ts
+│   └── ...
+└── pages/               # 모든 페이지
+```
+
+**문제점**: AI가 "인증 기능"을 수정하려면 4개 폴더를 뒤져야 함 → 오류 급증
+
+#### 2.4.2 기능형 (Vertical Slices)
+
+```
+apps/web/
+├── features/
+│   ├── auth/                    # 인증 블럭 (Self-Contained)
+│   │   ├── components/
+│   │   │   ├── LoginForm.svelte
+│   │   │   └── RegisterForm.svelte
+│   │   ├── hooks/
+│   │   │   └── useAuth.ts
+│   │   ├── stores/
+│   │   │   └── authStore.ts
+│   │   ├── api/
+│   │   │   └── authApi.ts
+│   │   ├── types.ts
+│   │   ├── index.ts             # Public API
+│   │   └── AGENT_RULES.md       # 에이전트 규칙
+│   │
+│   ├── player/                  # 플레이어 블럭
+│   │   ├── components/
+│   │   ├── hooks/
+│   │   ├── stores/
+│   │   └── ...
+│   │
+│   ├── search/                  # 검색 블럭
+│   └── content/                 # 콘텐츠 블럭
+│
+└── shared/                      # 공유 유틸리티 (최소화)
+    ├── ui/                      # 순수 UI 컴포넌트
+    └── utils/                   # 순수 유틸리티
+```
+
+**효과**: AI가 "인증 기능"을 수정할 때 `features/auth/` 폴더만 보면 **완벽히 이해** 가능
+
+#### 2.4.3 전환 가이드
+
+| 단계 | 작업 |
+|------|------|
+| 1 | 도메인 경계 식별 (Auth, Player, Search, Content) |
+| 2 | 각 도메인별 `features/` 폴더 생성 |
+| 3 | 관련 파일 이동 (컴포넌트, 훅, 스토어, 타입) |
+| 4 | `index.ts`로 Public API 정의 |
+| 5 | 외부 의존성은 `shared/`로 분리 |
+
+### 2.5 블럭 사이즈 가이드
+
+"얼마나 작게 쪼개야 하는가?"에 대한 정량적/정성적 기준입니다.
+
+#### 2.5.1 사이즈 기준표
+
+| 구분 | 판단 기준 (Threshold) | 위험 신호 (Red Flag) |
+|------|----------------------|---------------------|
+| **물리적 크기** | 파일 15~30개 / 30k~50k 토큰 | AI "Thinking" 시간 10초+ |
+| **논리적 범위** | 단일 책임 원칙 (SRP) | 설명이 두 문장 이상 필요 |
+| **독립성** | Self-Contained (자체 완결성) | 수정 시 다른 폴더 파일 열어야 함 |
+| **테스트 용이성** | 블럭 단독 테스트 가능 | Mock이 5개 이상 필요 |
+
+#### 2.5.2 블럭 분할 의사결정 트리
+
+```
+                        ┌─────────────────┐
+                        │  현재 블럭 크기  │
+                        │  평가 시작       │
+                        └────────┬────────┘
+                                 │
+                    ┌────────────▼────────────┐
+                    │   파일 30개 초과?        │
+                    └────────────┬────────────┘
+                           YES   │   NO
+                    ┌────────────┴────────────┐
+                    ▼                         │
+            ┌───────────────┐                 │
+            │  분할 필요 🔴  │                 │
+            │  서브블럭 생성 │                 │
+            └───────────────┘                 │
+                                              ▼
+                              ┌─────────────────────────┐
+                              │  AI 응답 시간 10초+?     │
+                              └────────────┬────────────┘
+                                     YES   │   NO
+                              ┌────────────┴────────────┐
+                              ▼                         │
+                      ┌───────────────┐                 │
+                      │  분할 고려 🟡  │                 │
+                      │  모니터링 필요 │                 │
+                      └───────────────┘                 │
+                                                        ▼
+                                        ┌───────────────────────┐
+                                        │  설명이 1문장인가?     │
+                                        └────────────┬──────────┘
+                                               YES   │   NO
+                                        ┌────────────┴────────────┐
+                                        ▼                         ▼
+                                ┌───────────────┐         ┌───────────────┐
+                                │  적정 크기 🟢  │         │  분할 고려 🟡  │
+                                │  유지           │         │  책임 분리    │
+                                └───────────────┘         └───────────────┘
+```
+
+#### 2.5.3 WSOPTV 블럭별 현황
+
+| 블럭 | 예상 파일 수 | 예상 토큰 | 상태 |
+|------|-------------|----------|------|
+| `auth` | 12개 | ~25k | 🟢 적정 |
+| `content` | 28개 | ~45k | 🟡 모니터링 |
+| `stream` | 18개 | ~35k | 🟢 적정 |
+| `search` | 10개 | ~20k | 🟢 적정 |
+| `player` | 22개 | ~40k | 🟢 적정 |
 
 ---
 
@@ -553,6 +777,103 @@ interface SearchDomainAgent extends Agent {
 | `auth.token` | 2 | 단일 블럭 | JWT 관리 |
 | ... | 2 | ... | ... |
 
+### 3.5 Agent Rules 파일
+
+각 블럭에 **'지능형 경계선'**을 긋는 규칙 파일입니다.
+
+#### 3.5.1 파일 구조
+
+```
+.claude/
+├── agents/
+│   ├── orchestrator.md          # 최상위 오케스트레이터 규칙
+│   ├── auth-domain.md           # Auth 도메인 에이전트 규칙
+│   ├── content-domain.md        # Content 도메인 에이전트 규칙
+│   ├── stream-domain.md         # Stream 도메인 에이전트 규칙
+│   └── search-domain.md         # Search 도메인 에이전트 규칙
+│
+apps/web/features/
+├── auth/
+│   └── AGENT_RULES.md           # Auth 블럭 전용 규칙
+├── player/
+│   └── AGENT_RULES.md           # Player 블럭 전용 규칙
+└── ...
+```
+
+#### 3.5.2 Agent Rules 템플릿
+
+```markdown
+<!-- features/auth/AGENT_RULES.md -->
+
+# Auth Block Agent Rules
+
+## Identity
+- **Role**: 인증/인가 전문가
+- **Domain**: Auth
+- **Scope**: `features/auth/` 내부만
+
+## Constraints (제약 사항)
+
+### DO (해야 할 것)
+- ✅ 이 폴더 내 파일만 수정
+- ✅ `types.ts`의 타입 정의 우선 확인
+- ✅ `index.ts`를 통해 외부 노출 API 관리
+- ✅ Zod 스키마로 입력 검증
+
+### DON'T (하지 말 것)
+- ❌ `features/` 외부 파일 직접 수정
+- ❌ `shared/ui` 컴포넌트 내부 수정
+- ❌ 전역 상태 직접 접근 (스토어 통해서만)
+- ❌ 하드코딩된 비밀값 사용
+
+## Dependencies (의존성)
+
+### 내부 의존성
+- `@wsoptv/types`: 공유 타입
+- `shared/utils`: 유틸리티 함수
+
+### 외부 의존성
+- `bcrypt`: 비밀번호 해싱
+- `jose`: JWT 처리
+
+## Testing
+- 단위 테스트: `__tests__/` 폴더
+- Mock: `authApi` 함수만 Mock 허용
+
+## Error Codes
+- `AUTH_INVALID_CREDENTIALS`
+- `AUTH_TOKEN_EXPIRED`
+- `AUTH_PENDING_APPROVAL`
+```
+
+#### 3.5.3 Claude Code 통합
+
+```yaml
+# .claude/settings.yaml (예시)
+
+agents:
+  rules_discovery:
+    enabled: true
+    patterns:
+      - ".claude/agents/*.md"
+      - "**/AGENT_RULES.md"
+
+  context_isolation:
+    enabled: true
+    strategy: "vertical_slice"
+    max_files: 30
+    max_tokens: 50000
+```
+
+#### 3.5.4 규칙 파일 효과
+
+| 항목 | Before | After |
+|------|--------|-------|
+| **컨텍스트 범위** | 전체 프로젝트 | 해당 블럭만 |
+| **에러율** | 높음 (무관 코드 간섭) | 낮음 (격리) |
+| **응답 속도** | 느림 | 빠름 |
+| **일관성** | 낮음 (스타일 혼재) | 높음 (규칙 적용) |
+
 ---
 
 ## 4. 오케스트레이션 패턴
@@ -655,6 +976,101 @@ async function executeVideoPlayWorkflow(
 
   return { content, hands, streamUrl };
 }
+```
+
+### 4.4 Conductor 워크플로우
+
+개발자는 코더(Coder)가 아닌 **지휘자(Conductor)**가 되어야 합니다.
+
+#### 4.4.1 역할 전환
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│                    ROLE TRANSFORMATION                       │
+├─────────────────────────────────────────────────────────────┤
+│                                                              │
+│    Before (코더)                 After (지휘자)              │
+│    ─────────────                ─────────────               │
+│                                                              │
+│    개발자 → 코드 작성           개발자 → 지시 전달          │
+│         ↓                            ↓                      │
+│    AI ← 코드 받아적기           Orchestrator Agent          │
+│                                      ↓                      │
+│                                 Domain Agents               │
+│                                      ↓                      │
+│                                 Block Agents → 코드 작성    │
+│                                                              │
+└─────────────────────────────────────────────────────────────┘
+```
+
+#### 4.4.2 3단계 워크플로우
+
+```mermaid
+sequenceDiagram
+    autonumber
+    actor Dev as Developer (지휘자)
+    participant Orch as Orchestrator
+    participant Domain as Domain Agent
+    participant Block as Block Agent
+
+    Note over Dev,Block: Phase 1: 지휘 (Orchestration)
+    Dev->>Orch: "결제 블럭에 PG사 연동 로직 업데이트해줘"
+    Orch->>Orch: 작업 분해 및 라우팅 결정
+    Orch->>Domain: delegateTask(payment-domain, pgIntegration)
+
+    Note over Dev,Block: Phase 2: 실행 (Execution)
+    Domain->>Block: execute(payment.gateway)
+    Block->>Block: features/payment/ 내에서만 작업
+    Block->>Block: AGENT_RULES.md 규칙 준수
+    Block-->>Domain: 결과 + 변경 파일 목록
+
+    Note over Dev,Block: Phase 3: 검증 (Integration)
+    Domain-->>Orch: 작업 완료 보고
+    Orch->>Orch: 전체 빌드/테스트 실행
+    Orch-->>Dev: 결과 보고 + PR 생성 제안
+
+    alt 검증 성공
+        Dev->>Orch: "PR 생성해줘"
+        Orch->>Orch: PR 생성
+    else 검증 실패
+        Dev->>Orch: "에러 수정해줘"
+        Orch->>Domain: 재작업 요청
+    end
+```
+
+#### 4.4.3 지휘 명령 예시
+
+| 지휘 명령 | 라우팅 | 실행 블럭 |
+|----------|--------|----------|
+| "인증 로직에 2FA 추가해줘" | auth-domain | auth.token, auth.session |
+| "검색 결과 정렬 방식 변경해줘" | search-domain | search.rank |
+| "스트리밍 품질 옵션 추가해줘" | stream-domain | stream.transcode, stream.deliver |
+| "플레이어에 핸드 스킵 기능 추가해줘" | content-domain + player | content.timeline, player |
+
+#### 4.4.4 지휘자 모범 사례
+
+```markdown
+## Good (좋은 지휘)
+
+✅ "Auth 도메인에서 리프레시 토큰 만료 시간을 환경별로 다르게 설정해줘"
+   → 명확한 도메인 + 구체적인 요구사항
+
+✅ "Content 블럭의 핸드 캐시 TTL을 5분에서 10분으로 변경해줘"
+   → 정확한 블럭 + 수치 명시
+
+✅ "Stream 도메인에서 트랜스코딩 진행률을 실시간으로 클라이언트에 전달하는 기능 추가해줘"
+   → 도메인 범위 + 기능 설명
+
+## Bad (나쁜 지휘)
+
+❌ "전체적으로 성능 개선해줘"
+   → 범위 불명확, 측정 기준 없음
+
+❌ "버그 고쳐줘"
+   → 어떤 버그인지 불명확
+
+❌ "코드 정리 좀 해줘"
+   → 범위와 기준 없음
 ```
 
 ---
@@ -1003,6 +1419,7 @@ packages/
 | Version | Date | Changes |
 |---------|------|---------|
 | 1.0.0 | 2025-12-09 | 초기 아키텍처 문서 |
+| 2.0.0 | 2025-12-09 | AI 컨텍스트 최적화, Vertical Slicing, 블럭 사이즈 가이드, Agent Rules, Conductor 워크플로우 추가 |
 
 ---
 
