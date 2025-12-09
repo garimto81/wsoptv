@@ -26,6 +26,7 @@
 		<nav class="nav">
 			<a href="/" class="nav-link">Home</a>
 			<a href="/browse" class="nav-link">Browse</a>
+			<a href="/jellyfin" class="nav-link">Jellyfin</a>
 			<a href="/search" class="nav-link">Search</a>
 		</nav>
 
