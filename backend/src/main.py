@@ -15,7 +15,9 @@ from .core.config import settings
 from .core.database import init_db
 
 # API Routers
-from .api.v1 import auth, catalogs, contents, jellyfin, search, stream, users
+from .api.v1 import auth, jellyfin, search, users
+# Legacy routers (deprecated - use Jellyfin API instead)
+# from .api.v1 import catalogs, contents, stream
 
 
 @asynccontextmanager
@@ -84,26 +86,6 @@ app.include_router(
     tags=["Auth"],
 )
 app.include_router(
-    catalogs.router,
-    prefix=f"{settings.API_V1_PREFIX}/catalogs",
-    tags=["Catalogs"],
-)
-app.include_router(
-    contents.router,
-    prefix=f"{settings.API_V1_PREFIX}",
-    tags=["Contents"],
-)
-app.include_router(
-    search.router,
-    prefix=f"{settings.API_V1_PREFIX}/search",
-    tags=["Search"],
-)
-app.include_router(
-    stream.router,
-    prefix=f"{settings.API_V1_PREFIX}/stream",
-    tags=["Stream"],
-)
-app.include_router(
     users.router,
     prefix=f"{settings.API_V1_PREFIX}/users",
     tags=["Users"],
@@ -113,6 +95,28 @@ app.include_router(
     prefix=f"{settings.API_V1_PREFIX}/jellyfin",
     tags=["Jellyfin"],
 )
+app.include_router(
+    search.router,
+    prefix=f"{settings.API_V1_PREFIX}/search",
+    tags=["Search"],
+)
+
+# Legacy routers (deprecated - commented out)
+# app.include_router(
+#     catalogs.router,
+#     prefix=f"{settings.API_V1_PREFIX}/catalogs",
+#     tags=["Catalogs"],
+# )
+# app.include_router(
+#     contents.router,
+#     prefix=f"{settings.API_V1_PREFIX}",
+#     tags=["Contents"],
+# )
+# app.include_router(
+#     stream.router,
+#     prefix=f"{settings.API_V1_PREFIX}/stream",
+#     tags=["Stream"],
+# )
 
 
 if __name__ == "__main__":

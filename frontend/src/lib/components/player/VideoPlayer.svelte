@@ -32,7 +32,10 @@
 	let controlsTimeout: ReturnType<typeof setTimeout>;
 
 	onMount(() => {
-		if (Hls.isSupported()) {
+		const isHlsUrl = src.includes('.m3u8');
+
+		if (isHlsUrl && Hls.isSupported()) {
+			// HLS streaming with hls.js
 			hls = new Hls({
 				enableWorker: true,
 				lowLatencyMode: true
@@ -41,18 +44,37 @@
 			hls.attachMedia(videoElement);
 			hls.on(Hls.Events.MANIFEST_PARSED, () => {
 				if (autoplay) {
-					videoElement.play();
+					videoElement.play().catch((err) => {
+						if (err.name !== 'AbortError') {
+							console.error('Video playback error:', err);
+						}
+					});
 				}
 				if (startTime > 0) {
 					videoElement.currentTime = startTime;
 				}
 			});
-		} else if (videoElement.canPlayType('application/vnd.apple.mpegurl')) {
+		} else if (isHlsUrl && videoElement.canPlayType('application/vnd.apple.mpegurl')) {
 			// Native HLS support (Safari)
 			videoElement.src = src;
 			if (startTime > 0) {
 				videoElement.currentTime = startTime;
 			}
+		} else {
+			// Direct stream (MP4, WebM, etc.) - no transcoding needed
+			videoElement.src = src;
+			videoElement.onloadedmetadata = () => {
+				if (startTime > 0) {
+					videoElement.currentTime = startTime;
+				}
+				if (autoplay) {
+					videoElement.play().catch((err) => {
+						if (err.name !== 'AbortError') {
+							console.error('Video playback error:', err);
+						}
+					});
+				}
+			};
 		}
 
 		// Keyboard shortcuts
@@ -107,7 +129,12 @@
 
 	function togglePlay() {
 		if (videoElement.paused) {
-			videoElement.play();
+			// Catch AbortError when play() is interrupted
+			videoElement.play().catch((err) => {
+				if (err.name !== 'AbortError') {
+					console.error('Video playback error:', err);
+				}
+			});
 		} else {
 			videoElement.pause();
 		}

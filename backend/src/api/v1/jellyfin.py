@@ -181,11 +181,14 @@ async def get_stream_url(
     if redirect:
         return RedirectResponse(url=stream_url)
 
+    # ApiResponse 형태로 반환 (Frontend api.get()이 response.data를 기대)
     return {
-        "item_id": item_id,
-        "hls_url": stream_url,
-        "direct_url": direct_url,
-        "thumbnail_url": service.get_thumbnail_url(item_id),
+        "data": {
+            "itemId": item_id,
+            "hlsUrl": stream_url,
+            "directUrl": direct_url,
+            "thumbnailUrl": service.get_thumbnail_url(item_id),
+        }
     }
 
 
@@ -241,7 +244,7 @@ async def search_contents(
         items = [
             JellyfinContentResponse.from_jellyfin_item(
                 item=item,
-                jellyfin_host=service.host,
+                jellyfin_host=service.public_host,  # 브라우저 접근용
                 api_key=service.api_key,
             )
             for item in result.items
