@@ -21,7 +21,7 @@
 	<div class="header-content">
 		<a href="/" class="logo">
 			<span class="logo-text">WSOPTV</span>
-			<span class="version-tag">v0.2.3-jellyfin</span>
+			<span class="version-tag">v0.2.4-jellyfin</span>
 		</a>
 
 		<nav class="nav">

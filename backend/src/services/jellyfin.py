@@ -123,6 +123,14 @@ class JellyfinService:
                 return lib
         return None
 
+    async def get_library_by_id(self, library_id: str) -> JellyfinLibrary | None:
+        """ID로 라이브러리 조회"""
+        libraries = await self.get_libraries()
+        for lib in libraries:
+            if lib.id == library_id:
+                return lib
+        return None
+
     # =========================================================================
     # Items (Media Content)
     # =========================================================================
@@ -274,7 +282,7 @@ class JellyfinService:
 
     async def get_contents(
         self,
-        library_name: str | None = None,
+        library_id: str | None = None,
         page: int = 1,
         limit: int = 20,
         search_term: str | None = None,
@@ -284,10 +292,10 @@ class JellyfinService:
 
         기존 WSOPTV ContentListResponse 형식과 호환
         """
-        # 라이브러리 ID 조회
+        # 라이브러리 ID 검증
         parent_id = None
-        if library_name:
-            library = await self.get_library_by_name(library_name)
+        if library_id:
+            library = await self.get_library_by_id(library_id)
             if library:
                 parent_id = library.id
 

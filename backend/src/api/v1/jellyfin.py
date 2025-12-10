@@ -97,7 +97,7 @@ async def list_libraries(
 @router.get("/contents")
 async def list_contents(
     _: ActiveUser,
-    library: str | None = Query(None, description="Library name (e.g., WSOP, HCL)"),
+    library: str | None = Query(None, description="Library ID (Jellyfin folder ID)"),
     q: str | None = Query(None, description="Search query"),
     page: int = Query(1, ge=1),
     limit: int = Query(20, ge=1, le=100),
@@ -106,14 +106,14 @@ async def list_contents(
     Jellyfin 콘텐츠 목록 (WSOPTV 형식)
 
     - 🔒 인증 필요
-    - 라이브러리 필터링
+    - 라이브러리 필터링 (ID 기반)
     - 검색 지원
     - 페이지네이션 지원
     """
     service = get_jellyfin_service()
     try:
         contents = await service.get_contents(
-            library_name=library,
+            library_id=library,
             page=page,
             limit=limit,
             search_term=q,
