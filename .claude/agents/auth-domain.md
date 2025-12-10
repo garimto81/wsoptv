@@ -68,10 +68,18 @@
 
 ### DON'T (하지 말 것)
 - ❌ Jellyfin, content, search, stream 도메인 파일 수정
+- ❌ **다른 도메인의 DB 테이블 직접 조작** (catalogs, contents, hands 등)
+- ❌ **E2E 테스트에서 프로덕션 DB 사용** (반드시 테스트 DB 사용)
 - ❌ 비밀번호 평문 저장/로깅
 - ❌ JWT 시크릿 하드코딩
 - ❌ 단일 서비스만 Docker 재빌드 (Backend만 또는 Frontend만)
 - ❌ `shared/` 또는 `packages/` 직접 수정
+
+### 📊 DB 테이블 소유권
+
+| 소유 테이블 | 읽기 전용 테이블 |
+|-------------|------------------|
+| `users`, `sessions` | `catalogs`, `contents` (FK 참조만) |
 
 ---
 

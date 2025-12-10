@@ -12,6 +12,34 @@
 
 ## 공통 응답 형식
 
+### ⚠️ 중요: 목록 API 응답 구조
+
+**모든 목록 API**는 아래 구조를 따릅니다 (배열을 직접 반환하지 않음):
+
+```typescript
+// ✅ 올바른 응답 (목록)
+{
+  "items": T[],    // 항상 배열
+  "total": number  // 전체 개수
+}
+
+// ❌ 잘못된 기대 (배열 직접 반환)
+T[]  // 이 형식은 사용하지 않음!
+```
+
+### Frontend 파싱 예시
+
+```typescript
+// ✅ 올바른 파싱
+const response = await api.get<{ items: Catalog[]; total: number }>('/catalogs');
+const catalogs = response.items;  // 배열 추출
+
+// ❌ 잘못된 파싱 (런타임 에러 발생)
+const catalogs = await api.get<Catalog[]>('/catalogs');  // undefined!
+```
+
+### 단일 항목 응답
+
 ```typescript
 // 성공
 { "data": T, "meta": { "timestamp": string, "requestId": string } }
@@ -631,3 +659,4 @@ stream_2.m3u8
 |---------|------|---------|
 | 1.0.0 | 2025-12-09 | 초기 API 스펙 |
 | 2.0.0 | 2025-12-09 | 보안/로직 이슈 수정: httpOnly 쿠키, Refresh Token, 토큰 Blacklist, Optimistic Locking, 트랜스코딩 상태 API (#1, #7, #12, #16, #24) |
+| 2.1.0 | 2025-12-10 | 목록 API 응답 구조 명확화 (items/total 구조 강조, Frontend 파싱 예시 추가) (#57) |

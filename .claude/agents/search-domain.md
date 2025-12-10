@@ -48,10 +48,18 @@
 
 ### DON'T (하지 말 것)
 - ❌ `features/` 외부 파일 직접 수정
+- ❌ **다른 도메인의 DB 테이블 직접 조작** (users, sessions 등)
+- ❌ **E2E 테스트에서 프로덕션 DB 사용** (반드시 테스트 DB 사용)
 - ❌ SQL Injection 취약 쿼리
 - ❌ 무제한 결과 반환
 - ❌ MeiliSearch 인덱스 직접 수정 (migration 통해서만)
 - ❌ 민감 필드 검색 노출
+
+### 📊 DB 테이블 소유권
+
+| 소유 테이블 | 읽기 전용 테이블 |
+|-------------|------------------|
+| (없음 - MeiliSearch 인덱스만 관리) | `contents`, `catalogs`, `hands` (인덱싱용) |
 
 ---
 
