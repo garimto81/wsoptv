@@ -15,7 +15,9 @@ class RowType(str, Enum):
     """Row 타입"""
 
     RECENTLY_ADDED = "recently_added"
-    LIBRARY = "library"
+    LIBRARY = "library"  # 레거시: Jellyfin Library 기반
+    SERIES = "series"  # 신규: PostgreSQL series 테이블 기반
+    CATALOG = "catalog"  # 신규: PostgreSQL catalog 그룹
     CONTINUE_WATCHING = "continue_watching"
     TRENDING = "trending"
     TOP_RATED = "top_rated"
@@ -25,11 +27,12 @@ class RowType(str, Enum):
 class RowItem(BaseModel):
     """Row 내 개별 아이템"""
 
-    id: str = Field(description="Jellyfin Item ID")
+    id: str = Field(description="Jellyfin Item ID 또는 Content ID")
     title: str
     thumbnail_url: str | None = Field(None, alias="thumbnailUrl")
     duration_sec: int = Field(alias="durationSec", default=0)
-    library_name: str | None = Field(None, alias="libraryName")
+    library_name: str | None = Field(None, alias="libraryName")  # 레거시 호환
+    series_name: str | None = Field(None, alias="seriesName")  # 신규: Series 이름
     progress: int | None = Field(None, description="시청 진행률 (0-100)")
     year: int | None = None
     date_created: datetime | None = Field(None, alias="dateCreated")
@@ -41,7 +44,9 @@ class RowItem(BaseModel):
 class RowFilter(BaseModel):
     """Row 필터 정보"""
 
-    library_id: str | None = Field(None, alias="libraryId")
+    library_id: str | None = Field(None, alias="libraryId")  # 레거시: Jellyfin Library ID
+    series_id: int | None = Field(None, alias="seriesId")  # 신규: PostgreSQL Series ID
+    catalog_id: str | None = Field(None, alias="catalogId")  # 신규: PostgreSQL Catalog ID
     sort_by: str | None = Field(None, alias="sortBy")
     sort_order: str | None = Field(None, alias="sortOrder")
     limit: int | None = None
@@ -79,7 +84,9 @@ class HomeRowsResponse(BaseModel):
 class BrowseParams(BaseModel):
     """Browse 페이지 요청 파라미터"""
 
-    library_id: str | None = Field(None, alias="libraryId")
+    library_id: str | None = Field(None, alias="libraryId")  # 레거시: Jellyfin Library ID
+    series_id: int | None = Field(None, alias="seriesId")  # 신규: PostgreSQL Series ID
+    catalog_id: str | None = Field(None, alias="catalogId")  # 신규: PostgreSQL Catalog ID
     sort_by: str = Field("DateCreated", alias="sortBy")
     sort_order: str = Field("Descending", alias="sortOrder")
     page: int = 1

@@ -97,6 +97,11 @@ async def get_library_row(
     description="""
     필터링/정렬/페이지네이션을 지원하는 콘텐츠 목록을 반환합니다.
 
+    필터 옵션:
+    - `library`: Jellyfin Library ID (레거시)
+    - `series`: PostgreSQL Series ID (하이브리드 모드)
+    - `catalog`: PostgreSQL Catalog ID (하이브리드 모드)
+
     정렬 옵션:
     - `DateCreated`: 추가일 기준
     - `SortName`: 이름 기준
@@ -106,6 +111,8 @@ async def get_library_row(
 )
 async def get_browse_contents(
     library_id: Annotated[str | None, Query(alias="library")] = None,
+    series_id: Annotated[int | None, Query(alias="series")] = None,
+    catalog_id: Annotated[str | None, Query(alias="catalog")] = None,
     sort_by: Annotated[str, Query(alias="sort")] = "DateCreated",
     sort_order: Annotated[str, Query(alias="order")] = "Descending",
     page: Annotated[int, Query(ge=1)] = 1,
@@ -116,6 +123,8 @@ async def get_browse_contents(
     try:
         params = BrowseParams(
             library_id=library_id,
+            series_id=series_id,
+            catalog_id=catalog_id,
             sort_by=sort_by,
             sort_order=sort_order,
             page=page,

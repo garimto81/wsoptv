@@ -3,17 +3,25 @@ Row Service
 
 Netflix-style 동적 카탈로그 Row 생성 서비스
 
-핵심 원칙:
-- PostgreSQL에 카탈로그 데이터 저장 X (동적 생성)
-- Jellyfin API를 통해 런타임에 Row 생성
+핵심 원칙 (v2.0 - Hybrid Architecture):
+- USE_HYBRID_CATALOG=true: PostgreSQL catalogs/series 기반 Row 생성
+- USE_HYBRID_CATALOG=false: Jellyfin Library 기반 Row 생성 (레거시)
 - Redis 캐싱 필수 (TTL 5분)
 """
 
 import logging
 from datetime import datetime, timedelta, timezone
-from typing import Any
+from typing import TYPE_CHECKING, Any
+
+from sqlalchemy import select
+from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.orm import selectinload
 
 from ..core.config import settings
+from ..core.database import async_session_maker
+from ..models.catalog import Catalog
+from ..models.content import Content
+from ..models.series import Series
 from ..schemas.jellyfin import JellyfinItem
 from ..schemas.row import (
     BrowseParams,
@@ -123,9 +131,17 @@ class RowService:
             if recently_added.items:
                 rows.append(recently_added)
 
-            # 2. Library Rows (동적 생성)
-            library_rows = await self._build_library_rows(limit_per_row)
-            rows.extend([r for r in library_rows if r.items])
+            # 2. Content Rows (Feature Flag 분기)
+            if settings.USE_HYBRID_CATALOG:
+                # 신규: PostgreSQL catalogs/series 기반 Row
+                logger.info("Using Hybrid Catalog (PostgreSQL series-based rows)")
+                series_rows = await self._build_series_rows(limit_per_row)
+                rows.extend([r for r in series_rows if r.items])
+            else:
+                # 레거시: Jellyfin Library 기반 Row
+                logger.info("Using Legacy Catalog (Jellyfin library-based rows)")
+                library_rows = await self._build_library_rows(limit_per_row)
+                rows.extend([r for r in library_rows if r.items])
 
             # 3. Continue Watching (로그인 사용자만)
             # TODO: user_id로 watch_progress 조회 구현
@@ -175,8 +191,100 @@ class RowService:
             filter=RowFilter(sort_by="DateCreated", sort_order="Descending"),
         )
 
+    async def _build_series_rows(self, limit: int) -> list[RowData]:
+        """
+        PostgreSQL series 테이블 기반 Row 생성 (하이브리드 모드)
+
+        Series를 Catalog 순서, Year 내림차순으로 정렬하여 Row 생성
+        """
+        rows: list[RowData] = []
+
+        async with async_session_maker() as session:
+            # Series 목록 조회 (Catalog 순서, Year 내림차순)
+            stmt = (
+                select(Series)
+                .join(Catalog)
+                .options(selectinload(Series.catalog))
+                .order_by(Catalog.sort_order, Series.year.desc())
+            )
+            result = await session.execute(stmt)
+            series_list = result.scalars().all()
+
+            for series in series_list:
+                cache_key = f"wsoptv:home:series:{series.id}"
+                cached = self._get_cache(cache_key)
+
+                if cached:
+                    rows.append(cached)
+                    continue
+
+                # Series별 콘텐츠 조회
+                content_stmt = (
+                    select(Content)
+                    .where(Content.series_id == series.id)
+                    .order_by(Content.episode_num.asc().nullsfirst())
+                    .limit(limit)
+                )
+                content_result = await session.execute(content_stmt)
+                contents = content_result.scalars().all()
+
+                if not contents:
+                    continue
+
+                # Content → RowItem 변환
+                items = [
+                    self._content_to_row_item(content, series.title)
+                    for content in contents
+                ]
+
+                # 전체 콘텐츠 수 조회
+                from sqlalchemy import func
+                count_stmt = (
+                    select(func.count())
+                    .select_from(Content)
+                    .where(Content.series_id == series.id)
+                )
+                count_result = await session.execute(count_stmt)
+                total_count = count_result.scalar() or 0
+
+                row = RowData(
+                    id=f"series_{series.id}",
+                    type=RowType.SERIES,
+                    title=series.title,
+                    items=items,
+                    view_all_url=f"/browse?series={series.id}",
+                    total_count=total_count,
+                    filter=RowFilter(
+                        series_id=series.id,
+                        sort_by="episode_num",
+                        sort_order="Ascending",
+                    ),
+                )
+
+                # 캐시 저장
+                self._set_cache(cache_key, row, CACHE_TTL_LIBRARY)
+                rows.append(row)
+
+        return rows
+
+    def _content_to_row_item(
+        self,
+        content: Content,
+        series_name: str | None = None,
+    ) -> RowItem:
+        """PostgreSQL Content를 RowItem으로 변환"""
+        return RowItem(
+            id=content.file_id or str(content.id),
+            title=content.title,
+            thumbnail_url=content.thumbnail_url,
+            duration_sec=content.duration_sec,
+            series_name=series_name,
+            year=None,  # Content 모델에 year 필드 없음
+            date_created=content.created_at,
+        )
+
     async def _build_library_rows(self, limit: int) -> list[RowData]:
-        """라이브러리별 Row 동적 생성"""
+        """라이브러리별 Row 동적 생성 (레거시 - Jellyfin Library 기반)"""
         rows: list[RowData] = []
 
         # 라이브러리 목록 조회
@@ -264,6 +372,19 @@ class RowService:
         params: BrowseParams,
     ) -> BrowseResponse:
         """Browse 페이지 콘텐츠 조회 (필터링/정렬/페이지네이션)"""
+
+        # Series/Catalog 필터가 있으면 PostgreSQL 기반 조회 (하이브리드 모드)
+        if params.series_id or params.catalog_id:
+            return await self._get_browse_contents_from_db(params)
+
+        # 기존: Jellyfin Library 기반 조회
+        return await self._get_browse_contents_from_jellyfin(params)
+
+    async def _get_browse_contents_from_jellyfin(
+        self,
+        params: BrowseParams,
+    ) -> BrowseResponse:
+        """Jellyfin 기반 Browse 콘텐츠 조회 (레거시)"""
         start_index = (params.page - 1) * params.limit
 
         response = await self.jellyfin.get_items(
@@ -296,6 +417,75 @@ class RowService:
             limit=params.limit,
             has_next=has_next,
         )
+
+    async def _get_browse_contents_from_db(
+        self,
+        params: BrowseParams,
+    ) -> BrowseResponse:
+        """PostgreSQL 기반 Browse 콘텐츠 조회 (하이브리드 모드)"""
+        from sqlalchemy import func
+
+        offset = (params.page - 1) * params.limit
+
+        async with async_session_maker() as session:
+            # 기본 쿼리
+            stmt = select(Content).options(selectinload(Content.series))
+
+            # Series 필터
+            if params.series_id:
+                stmt = stmt.where(Content.series_id == params.series_id)
+
+            # Catalog 필터 (해당 Catalog의 모든 Series 포함)
+            if params.catalog_id:
+                series_ids_stmt = select(Series.id).where(Series.catalog_id == params.catalog_id)
+                stmt = stmt.where(Content.series_id.in_(series_ids_stmt))
+
+            # 정렬
+            if params.sort_by == "DateCreated":
+                order_col = Content.created_at
+            elif params.sort_by == "SortName":
+                order_col = Content.title
+            else:
+                order_col = Content.episode_num
+
+            if params.sort_order == "Descending":
+                stmt = stmt.order_by(order_col.desc().nullsfirst())
+            else:
+                stmt = stmt.order_by(order_col.asc().nullsfirst())
+
+            # 페이지네이션
+            stmt = stmt.offset(offset).limit(params.limit)
+
+            # 실행
+            result = await session.execute(stmt)
+            contents = result.scalars().all()
+
+            # 전체 수 조회
+            count_stmt = select(func.count()).select_from(Content)
+            if params.series_id:
+                count_stmt = count_stmt.where(Content.series_id == params.series_id)
+            if params.catalog_id:
+                series_ids_stmt = select(Series.id).where(Series.catalog_id == params.catalog_id)
+                count_stmt = count_stmt.where(Content.series_id.in_(series_ids_stmt))
+
+            count_result = await session.execute(count_stmt)
+            total = count_result.scalar() or 0
+
+            # RowItem 변환
+            items = []
+            for content in contents:
+                series_name = content.series.title if content.series else None
+                items.append(self._content_to_row_item(content, series_name))
+
+            has_next = (offset + params.limit) < total
+
+            return BrowseResponse(
+                items=items,
+                total=total,
+                page=params.page,
+                limit=params.limit,
+                has_next=has_next,
+            )
 
 
 # Singleton instance

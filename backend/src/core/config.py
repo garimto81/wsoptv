@@ -107,6 +107,9 @@ class Settings(BaseSettings):
     JELLYFIN_BROWSER_HOST: str = ""  # Browser → Jellyfin (비어있으면 JELLYFIN_HOST 사용)
     JELLYFIN_API_KEY: str = ""
 
+    # Feature Flags
+    USE_HYBRID_CATALOG: bool = False  # PostgreSQL catalogs/series 기반 Row 생성 (true: 신규, false: Jellyfin Library 기반)
+
     @property
     def JELLYFIN_PUBLIC_HOST(self) -> str:
         """브라우저에서 접근 가능한 Jellyfin 호스트 URL"""
