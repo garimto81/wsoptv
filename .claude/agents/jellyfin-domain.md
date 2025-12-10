@@ -83,11 +83,25 @@ Frontend ──▶ Backend (/api/v1/jellyfin/*) ──▶ Jellyfin Server (:8096
 
 ### DON'T (하지 말 것)
 - ❌ auth, content, search, stream 도메인 파일 수정
+- ❌ **다른 도메인의 DB 테이블 직접 조작** (users, sessions 등)
+- ❌ **E2E 테스트에서 프로덕션 DB 사용**
 - ❌ Frontend에서 Jellyfin 직접 호출 (CORS, 보안)
 - ❌ Jellyfin 인증 직접 처리 (WSOPTV 인증 사용)
 - ❌ `JELLYFIN_API_KEY` 프론트엔드 노출
 - ❌ Direct Play 강제 (HLS fallback 필요)
 - ❌ Jellyfin URL 하드코딩 (config.py 참조)
+
+### ⚠️ 크로스 도메인 주의사항
+```
+Jellyfin 작업 시 auth-domain 경계 침범 금지!
+
+✅ 허용: Jellyfin API 호출, jellyfin.py 수정, Frontend Jellyfin 페이지
+❌ 금지: users 테이블 조작, auth 관련 테스트 데이터 생성
+
+테스트 시 인증이 필요하면:
+→ 기존 테스트 유저 사용
+→ 또는 auth-domain에 요청 (직접 DB 조작 금지)
+```
 
 ---
 

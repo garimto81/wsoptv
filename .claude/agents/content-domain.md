@@ -54,10 +54,18 @@
 
 ### DON'T (하지 말 것)
 - ❌ `features/` 외부 파일 직접 수정
+- ❌ **다른 도메인의 DB 테이블 직접 조작** (users, sessions 등)
+- ❌ **E2E 테스트에서 프로덕션 DB 사용** (반드시 테스트 DB 사용)
 - ❌ 무한 결과 반환 (limit 필수)
 - ❌ 캐시 무효화 없이 데이터 수정
 - ❌ Stream 도메인 직접 호출
 - ❌ 민감한 사용자 정보 노출
+
+### 📊 DB 테이블 소유권
+
+| 소유 테이블 | 읽기 전용 테이블 |
+|-------------|------------------|
+| `catalogs`, `series`, `contents`, `files`, `hands`, `hand_players`, `players` | `users` (FK 참조만) |
 
 ---
 

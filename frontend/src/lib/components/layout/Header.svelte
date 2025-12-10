@@ -21,6 +21,7 @@
 	<div class="header-content">
 		<a href="/" class="logo">
 			<span class="logo-text">WSOPTV</span>
+			<span class="version-tag">v0.1.3-fix-catalog-parse</span>
 		</a>
 
 		<nav class="nav">
@@ -85,6 +86,16 @@
 		font-size: 1.5rem;
 		font-weight: 700;
 		color: var(--color-primary);
+	}
+
+	.version-tag {
+		font-size: 0.65rem;
+		color: var(--color-text-muted);
+		background: var(--color-surface);
+		padding: 2px 6px;
+		border-radius: 4px;
+		margin-left: 8px;
+		vertical-align: middle;
 	}
 
 	.nav {

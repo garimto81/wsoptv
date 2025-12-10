@@ -16,9 +16,14 @@
 	let error = $state('');
 
 	onMount(async () => {
+		console.log('[v0.1.3] Starting catalog load...');
 		try {
-			catalogs = await api.get<Catalog[]>('/catalogs');
+			// API 응답: { items: [...], total: N } 구조
+			const response = await api.get<{ items: Catalog[]; total: number }>('/catalogs');
+			catalogs = response.items || [];
+			console.log('[v0.1.3] Catalogs loaded:', catalogs.length);
 		} catch (err: any) {
+			console.error('[v0.1.3] Catalog load error:', err);
 			error = err.message || 'Failed to load catalogs';
 		} finally {
 			isLoading = false;
