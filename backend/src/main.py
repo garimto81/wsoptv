@@ -15,7 +15,7 @@ from .core.config import settings
 from .core.database import init_db
 
 # API Routers
-from .api.v1 import auth, jellyfin, search, users
+from .api.v1 import auth, home, jellyfin, search, users
 # Legacy routers (deprecated - use Jellyfin API instead)
 # from .api.v1 import catalogs, contents, stream
 
@@ -99,6 +99,11 @@ app.include_router(
     search.router,
     prefix=f"{settings.API_V1_PREFIX}/search",
     tags=["Search"],
+)
+app.include_router(
+    home.router,
+    prefix=f"{settings.API_V1_PREFIX}/home",
+    tags=["Home"],
 )
 
 # Legacy routers (deprecated - commented out)
