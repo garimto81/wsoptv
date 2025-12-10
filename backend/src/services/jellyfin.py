@@ -36,7 +36,8 @@ class JellyfinService:
     """Jellyfin API 클라이언트 서비스"""
 
     def __init__(self):
-        self.host = settings.JELLYFIN_HOST
+        self.host = settings.JELLYFIN_HOST  # Backend → Jellyfin 통신용
+        self.public_host = settings.JELLYFIN_PUBLIC_HOST  # Browser → Jellyfin URL용
         self.api_key = settings.JELLYFIN_API_KEY
         self._client: httpx.AsyncClient | None = None
 
@@ -119,6 +120,14 @@ class JellyfinService:
         libraries = await self.get_libraries()
         for lib in libraries:
             if lib.name.lower() == name.lower():
+                return lib
+        return None
+
+    async def get_library_by_id(self, library_id: str) -> JellyfinLibrary | None:
+        """ID로 라이브러리 조회"""
+        libraries = await self.get_libraries()
+        for lib in libraries:
+            if lib.id == library_id:
                 return lib
         return None
 
@@ -228,16 +237,26 @@ class JellyfinService:
         self,
         item_id: str,
         media_source_id: str | None = None,
-        static: bool = True,
     ) -> str:
-        """HLS 스트림 URL 생성"""
+        """
+        Direct Play URL 생성 (브라우저 접근용 - public_host 사용)
+
+        원본 MP4를 트랜스코딩/리먹스 없이 직접 스트리밍
+        - Static=true: 원본 그대로 전송
+        - Accept-Ranges 지원으로 시크 가능
+        - 브라우저 네이티브 MP4 재생 사용
+        """
         source_id = media_source_id or item_id
-        params = f"Static={str(static).lower()}&mediaSourceId={source_id}&api_key={self.api_key}"
-        return f"{self.host}/Videos/{item_id}/stream.m3u8?{params}"
+        params = (
+            f"mediaSourceId={source_id}"
+            f"&api_key={self.api_key}"
+            f"&Static=true"
+        )
+        return f"{self.public_host}/Videos/{item_id}/stream.mp4?{params}"
 
     def get_direct_stream_url(self, item_id: str) -> str:
-        """Direct Stream URL (트랜스코딩 없이)"""
-        return f"{self.host}/Videos/{item_id}/stream?Static=true&api_key={self.api_key}"
+        """Direct Stream URL (브라우저 접근용 - public_host 사용)"""
+        return f"{self.public_host}/Videos/{item_id}/stream?Static=true&api_key={self.api_key}"
 
     def get_thumbnail_url(
         self,
@@ -246,8 +265,8 @@ class JellyfinService:
         max_width: int | None = None,
         max_height: int | None = None,
     ) -> str:
-        """썸네일 이미지 URL 생성"""
-        url = f"{self.host}/Items/{item_id}/Images/{image_type}"
+        """썸네일 이미지 URL 생성 (브라우저 접근용 - public_host 사용)"""
+        url = f"{self.public_host}/Items/{item_id}/Images/{image_type}"
         params = []
         if max_width:
             params.append(f"maxWidth={max_width}")
@@ -263,7 +282,7 @@ class JellyfinService:
 
     async def get_contents(
         self,
-        library_name: str | None = None,
+        library_id: str | None = None,
         page: int = 1,
         limit: int = 20,
         search_term: str | None = None,
@@ -273,10 +292,10 @@ class JellyfinService:
 
         기존 WSOPTV ContentListResponse 형식과 호환
         """
-        # 라이브러리 ID 조회
+        # 라이브러리 ID 검증
         parent_id = None
-        if library_name:
-            library = await self.get_library_by_name(library_name)
+        if library_id:
+            library = await self.get_library_by_id(library_id)
             if library:
                 parent_id = library.id
 
@@ -291,11 +310,11 @@ class JellyfinService:
             fields=["Path", "Overview", "DateCreated", "MediaSources"],
         )
 
-        # WSOPTV 형식으로 변환
+        # WSOPTV 형식으로 변환 (브라우저 접근용 public_host 사용)
         items = [
             JellyfinContentResponse.from_jellyfin_item(
                 item=item,
-                jellyfin_host=self.host,
+                jellyfin_host=self.public_host,
                 api_key=self.api_key,
             )
             for item in response.items
@@ -318,7 +337,7 @@ class JellyfinService:
 
         return JellyfinContentResponse.from_jellyfin_item(
             item=item,
-            jellyfin_host=self.host,
+            jellyfin_host=self.public_host,  # 브라우저 접근용
             api_key=self.api_key,
         )
 

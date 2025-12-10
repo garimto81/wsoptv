@@ -1,6 +1,6 @@
 # Proposal: Jellyfin 기반 아키텍처 전환
 
-**Version**: 1.0.0 | **Date**: 2025-12-09 | **Status**: ✅ Approved
+**Version**: 1.2.0 | **Date**: 2025-12-10 | **Status**: ✅ Approved (Phase 3 완료 - 단일 아키텍처 달성)
 
 > Docker 스트리밍 제한 해결을 위한 Jellyfin + 커스텀 플러그인 전환 제안서
 
@@ -17,6 +17,7 @@
 7. [마이그레이션 로드맵](#7-마이그레이션-로드맵)
 8. [리스크 분석](#8-리스크-분석)
 9. [결정 사항](#9-결정-사항)
+10. [구현 현황](#10-구현-현황) ✨ NEW
 
 ---
 
@@ -641,6 +642,132 @@ Fresh Install → 10.11.x (신규 설치 권장) ✅
 - [Duplicate Key Migration Error](https://github.com/jellyfin/jellyfin/issues/15147)
 - [Migration from 10.8.13 fails](https://github.com/jellyfin/jellyfin/issues/13049)
 - [Missing ActivityLog Table](https://github.com/jellyfin/jellyfin/issues/15158)
+
+---
+
+## 10. 구현 현황
+
+### 10.1 Phase 진행 상태
+
+| Phase | 상태 | 완료일 | 비고 |
+|-------|------|--------|------|
+| Phase 0: 준비 | ✅ 완료 | 2025-12-09 | Jellyfin 설치 가이드 작성 |
+| Phase 1: Jellyfin 설치 | ✅ 완료 | 2025-12-09 | Windows Native 10.11.4 |
+| Phase 2: 백엔드 통합 | ✅ 완료 | 2025-12-10 | API 프록시 구현, 레거시 API 비활성화 |
+| Phase 3: 프론트엔드 통합 | ✅ 완료 | 2025-12-10 | 단일 아키텍처 달성, 중복 라우트 제거 |
+| Phase 4: 안정화 | 🔄 진행 중 | - | E2E 테스트, 문서화 |
+
+### 10.2 해결된 이슈
+
+#### 10.2.1 Docker 네트워크 URL 문제 (2025-12-10)
+
+**문제**: Backend에서 생성한 Jellyfin 스트림 URL이 브라우저에서 접근 불가
+
+```
+원인:
+- Backend가 JELLYFIN_HOST=http://host.docker.internal:8096 사용
+- 스트림 URL: http://host.docker.internal:8096/Videos/{id}/stream.m3u8
+- 브라우저는 host.docker.internal DNS 해석 불가
+```
+
+**해결책**: 내부 통신용 호스트와 외부 노출용 호스트 분리
+
+| 환경 변수 | 용도 | 예시 값 |
+|-----------|------|---------|
+| `JELLYFIN_HOST` | Backend → Jellyfin (Docker 내부 통신) | `http://host.docker.internal:8096` |
+| `JELLYFIN_BROWSER_HOST` | Browser → Jellyfin (외부 접근 URL) | `http://localhost:8096` |
+
+**수정된 파일**:
+
+| 파일 | 변경 내용 |
+|------|----------|
+| `backend/src/core/config.py` | `JELLYFIN_BROWSER_HOST`, `JELLYFIN_PUBLIC_HOST` 프로퍼티 추가 |
+| `backend/src/services/jellyfin.py` | 스트림/썸네일 URL 생성 시 `public_host` 사용 |
+| `backend/src/api/v1/jellyfin.py` | 검색 결과 URL 변환 시 `public_host` 사용 |
+| `docker-compose.yml` | Jellyfin 환경 변수 추가 |
+
+**코드 변경 요약**:
+
+```python
+# config.py
+JELLYFIN_HOST: str = "http://localhost:8096"  # Backend → Jellyfin
+JELLYFIN_BROWSER_HOST: str = ""  # Browser → Jellyfin
+
+@property
+def JELLYFIN_PUBLIC_HOST(self) -> str:
+    """브라우저에서 접근 가능한 Jellyfin 호스트 URL"""
+    return self.JELLYFIN_BROWSER_HOST or self.JELLYFIN_HOST
+
+# jellyfin.py (service)
+def get_stream_url(self, item_id: str, ...) -> str:
+    # ✅ public_host 사용 (브라우저 접근용)
+    return f"{self.public_host}/Videos/{item_id}/stream.m3u8?..."
+```
+
+```yaml
+# docker-compose.yml
+backend:
+  environment:
+    JELLYFIN_HOST: ${JELLYFIN_HOST:-http://host.docker.internal:8096}
+    JELLYFIN_BROWSER_HOST: ${JELLYFIN_BROWSER_HOST:-http://localhost:8096}
+    JELLYFIN_API_KEY: ${JELLYFIN_API_KEY:-}
+```
+
+### 10.3 알려진 제한사항
+
+| 제한사항 | 원인 | 해결 방안 |
+|---------|------|----------|
+| HLS 스트리밍 시 CORS | Jellyfin 직접 호출 | Backend 프록시 또는 Jellyfin CORS 설정 |
+| 라이브러리 스캔 시간 | 18TB+ 대용량 | 야간 스캔, 점진적 추가 |
+
+### 10.4 Phase 3 완료 내역 (2025-12-10)
+
+#### 단일 아키텍처 달성
+
+**Frontend 변경 사항**:
+| 변경 유형 | 파일/라우트 | 내용 |
+|----------|------------|------|
+| ✅ 통합 | `/routes/+page.svelte` | Jellyfin API 사용, WSOPTV 히어로 유지 |
+| ✅ 통합 | `/routes/watch/[id]/+page.svelte` | Jellyfin 스트리밍 + VideoPlayer 컴포넌트 |
+| ✅ 간소화 | `Header.svelte` | Home, Search만 유지, 버전 v0.2.0-jellyfin |
+| ❌ 제거 | `/routes/browse` | 레거시 (Jellyfin contents로 대체) |
+| ❌ 제거 | `/routes/catalog/[id]` | 레거시 (Jellyfin libraries로 대체) |
+| ❌ 제거 | `/routes/series/[id]` | 레거시 |
+| ❌ 제거 | `/routes/jellyfin/**` | 중복 제거 (홈으로 통합) |
+| ❌ 제거 | `/routes/player/[id]` | 중복 제거 |
+
+**Backend 변경 사항**:
+| 변경 유형 | 모듈 | 내용 |
+|----------|------|------|
+| ✅ 활성 | `jellyfin.py` | Jellyfin API 프록시 (메인) |
+| ✅ 활성 | `auth.py` | 인증 (유지) |
+| ✅ 활성 | `users.py` | 사용자 관리 (유지) |
+| ✅ 활성 | `search.py` | MeiliSearch 통합 검색 (유지) |
+| ⏸️ 비활성 | `catalogs.py` | 레거시 (코드 유지, 라우터 비활성) |
+| ⏸️ 비활성 | `contents.py` | 레거시 (코드 유지, 라우터 비활성) |
+| ⏸️ 비활성 | `stream.py` | 레거시 (코드 유지, 라우터 비활성) |
+
+**API 엔드포인트 매핑**:
+```
+[Before - 중복 시스템]
+/api/v1/catalogs           → PostgreSQL 카탈로그
+/api/v1/contents           → PostgreSQL 콘텐츠
+/api/v1/stream/{id}        → NAS HLS 스트림
+/api/v1/jellyfin/*         → Jellyfin 프록시
+
+[After - 단일 시스템]
+/api/v1/jellyfin/contents  → Jellyfin 콘텐츠 (메인)
+/api/v1/jellyfin/stream    → Jellyfin HLS 스트림
+/api/v1/jellyfin/libraries → Jellyfin 라이브러리
+/api/v1/search             → MeiliSearch (유지)
+```
+
+### 10.5 다음 작업
+
+- [ ] 포커 핸드 타임라인 연동 (Jellyfin ID ↔ 핸드 매핑)
+- [ ] E2E 테스트 작성
+- [ ] 성능 최적화 (Redis 캐싱)
+- [ ] MeiliSearch 인덱싱 Jellyfin 소스 전환
 
 ---
 

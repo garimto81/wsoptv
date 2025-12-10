@@ -21,13 +21,11 @@
 	<div class="header-content">
 		<a href="/" class="logo">
 			<span class="logo-text">WSOPTV</span>
-			<span class="version-tag">v0.1.3-fix-catalog-parse</span>
+			<span class="version-tag">v0.2.4-jellyfin</span>
 		</a>
 
 		<nav class="nav">
 			<a href="/" class="nav-link">Home</a>
-			<a href="/browse" class="nav-link">Browse</a>
-			<a href="/jellyfin" class="nav-link">Jellyfin</a>
 			<a href="/search" class="nav-link">Search</a>
 		</nav>
 

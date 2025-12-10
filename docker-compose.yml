@@ -99,6 +99,10 @@ services:
       # NAS
       NAS_MOUNT_PATH: /mnt/nas
       HLS_CACHE_PATH: /app/hls-cache
+      # Jellyfin
+      JELLYFIN_HOST: ${JELLYFIN_HOST:-http://host.docker.internal:8096}
+      JELLYFIN_BROWSER_HOST: ${JELLYFIN_BROWSER_HOST:-http://localhost:8096}
+      JELLYFIN_API_KEY: ${JELLYFIN_API_KEY:-}
     volumes:
       - type: bind
         source: ${NAS_LOCAL_PATH:-//10.10.100.122/docker/GGPNAs}
