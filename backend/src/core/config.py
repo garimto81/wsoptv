@@ -103,8 +103,17 @@ class Settings(BaseSettings):
     RATE_LIMIT_WINDOW_SECONDS: int = 60
 
     # Jellyfin
-    JELLYFIN_HOST: str = "http://localhost:8096"
+    JELLYFIN_HOST: str = "http://localhost:8096"  # Backend → Jellyfin (Docker 내부 통신)
+    JELLYFIN_BROWSER_HOST: str = ""  # Browser → Jellyfin (비어있으면 JELLYFIN_HOST 사용)
     JELLYFIN_API_KEY: str = ""
+
+    # Feature Flags
+    USE_HYBRID_CATALOG: bool = False  # PostgreSQL catalogs/series 기반 Row 생성 (true: 신규, false: Jellyfin Library 기반)
+
+    @property
+    def JELLYFIN_PUBLIC_HOST(self) -> str:
+        """브라우저에서 접근 가능한 Jellyfin 호스트 URL"""
+        return self.JELLYFIN_BROWSER_HOST or self.JELLYFIN_HOST
 
     @property
     def JELLYFIN_AUTH_HEADER(self) -> str:

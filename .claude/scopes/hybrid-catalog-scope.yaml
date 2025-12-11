@@ -1,0 +1,125 @@
+# Hybrid Catalog System - Code Isolation Scope
+# PRD: docs/prds/0004-prd-hybrid-catalog-system.md
+# Date: 2025-12-11
+
+task:
+  name: "Hybrid Catalog System 구현"
+  prd: "0004-prd-hybrid-catalog-system.md"
+  feature_flag: "USE_HYBRID_CATALOG"
+
+# 변경 허용 범위 정의
+scopes:
+  primary:
+    description: "자유롭게 수정 가능한 파일"
+    files:
+      - "backend/src/services/row_service.py"
+      - "backend/src/schemas/row.py"
+      - "backend/tests/services/test_row_service.py"
+      - "backend/tests/api/test_home.py"
+    rules:
+      - "새 함수 추가 허용"
+      - "기존 함수 수정 시 Feature Flag 분기 필수"
+      - "테스트 추가 필수"
+
+  secondary:
+    description: "최소 변경만 허용 (명시적 승인 필요)"
+    files:
+      - path: "backend/src/core/config.py"
+        allowed_changes:
+          - "USE_HYBRID_CATALOG 설정 추가만"
+        forbidden_changes:
+          - "기존 설정 수정"
+          - "다른 Feature Flag 추가"
+
+      - path: "backend/src/api/v1/home.py"
+        allowed_changes:
+          - "series, catalog 쿼리 파라미터 추가"
+        forbidden_changes:
+          - "기존 엔드포인트 시그니처 변경"
+          - "응답 스키마 변경"
+
+      - path: ".env.example"
+        allowed_changes:
+          - "USE_HYBRID_CATALOG 환경 변수 문서화"
+
+  forbidden:
+    description: "절대 수정 금지 (이 작업 범위에서)"
+    files:
+      # 기존 로직 보존
+      - "backend/src/services/jellyfin.py"
+      - "backend/src/api/v1/jellyfin.py"
+
+      # 모델 변경 없음
+      - "backend/src/models/*.py"
+
+      # Frontend 변경 불필요
+      - "frontend/**"
+
+      # 다른 도메인
+      - "backend/src/api/v1/auth.py"
+      - "backend/src/api/v1/stream.py"
+      - "backend/src/services/auth.py"
+
+      # 공통 인프라
+      - "backend/src/core/database.py"
+      - "backend/src/core/security.py"
+      - "docker-compose.yml"
+
+# 변경 패턴 규칙
+patterns:
+  required:
+    - name: "Feature Flag 분기"
+      description: "신규 로직은 반드시 Feature Flag로 분기"
+      example: |
+        if settings.USE_HYBRID_CATALOG:
+            rows = await self._build_series_rows(limit)
+        else:
+            rows = await self._build_library_rows(limit)  # 기존 유지
+
+    - name: "기존 함수 보존"
+      description: "_build_library_rows()는 수정하지 않고 그대로 유지"
+
+  forbidden:
+    - name: "기존 함수 수정"
+      description: "기존 동작하는 함수를 직접 수정하지 않음"
+      bad_example: |
+        def _build_library_rows(self, limit):
+            # 기존 코드 수정 ❌
+
+    - name: "스키마 변경"
+      description: "기존 응답 스키마를 변경하지 않음"
+      bad_example: |
+        class RowData:
+            items: list[RowItem]  # 기존 필드 타입 변경 ❌
+
+    - name: "import 정리"
+      description: "관련 없는 import 추가/삭제/재정렬 금지"
+
+# 롤백 체크리스트
+rollback:
+  steps:
+    - "USE_HYBRID_CATALOG=false 설정"
+    - "docker compose restart backend"
+    - "기존 테스트 통과 확인"
+
+  verification:
+    - "GET /api/v1/home 응답이 기존과 동일"
+    - "기존 6개 Row (5 Library + Recent) 반환"
+    - "Frontend 정상 동작"
+
+# 테스트 요구사항
+testing:
+  unit:
+    - "test_build_series_rows_with_flag_on"
+    - "test_build_library_rows_with_flag_off"
+    - "test_content_to_row_item_with_jellyfin_id"
+    - "test_content_to_row_item_without_jellyfin_id"
+
+  integration:
+    - "test_homepage_hybrid_mode"
+    - "test_homepage_legacy_mode"
+    - "test_browse_with_series_filter"
+
+  e2e:
+    - "홈페이지 Row 렌더링 확인"
+    - "Series Row 클릭 → Browse 페이지 이동"

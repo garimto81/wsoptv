@@ -45,7 +45,20 @@ export const authStore = {
 		return state.user?.status === 'approved';
 	},
 
+	/**
+	 * Set user from server-side load data (from +layout.ts)
+	 * This avoids duplicate API calls since +layout.ts already fetched auth
+	 */
+	setUser(user: User | null) {
+		state.user = user;
+		state.isAuthenticated = user !== null;
+		state.isLoading = false;
+	},
+
 	async init() {
+		// Skip if already initialized (e.g., from setUser)
+		if (!state.isLoading) return;
+
 		try {
 			state.isLoading = true;
 			const user = await api.get<User>('/auth/me');

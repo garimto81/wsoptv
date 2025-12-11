@@ -177,10 +177,21 @@ Jellyfin 작업 시 auth-domain 경계 침범 금지!
 ## Jellyfin Integration Notes
 
 ### 서버 설정
+
 ```env
-JELLYFIN_HOST=http://localhost:8096
+# Backend → Jellyfin 통신 (Docker 컨테이너에서 호스트 접근)
+JELLYFIN_HOST=http://host.docker.internal:8096
+
+# Browser → Jellyfin 스트리밍 (브라우저에서 직접 접근)
+JELLYFIN_BROWSER_HOST=http://localhost:8096
+
+# Jellyfin API 키
 JELLYFIN_API_KEY=your-api-key-here
 ```
+
+> ⚠️ **중요**: `JELLYFIN_HOST`와 `JELLYFIN_BROWSER_HOST`를 분리해야 합니다!
+> - `JELLYFIN_HOST`: Docker 컨테이너 내부에서 Jellyfin 서버에 접근할 때 사용 (`host.docker.internal`)
+> - `JELLYFIN_BROWSER_HOST`: 브라우저에서 스트림 URL에 접근할 때 사용 (`localhost`)
 
 ### API 키 생성
 1. Jellyfin 관리자 대시보드 접속

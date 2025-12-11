@@ -4,6 +4,7 @@
 	import { onMount } from 'svelte';
 	import { api } from '$lib/api';
 	import { Card, Spinner, Button } from '$lib/components/ui';
+	import { authStore } from '$lib/stores';
 
 	interface SearchResult {
 		id: number;
@@ -41,6 +42,13 @@
 	const urlQuery = $derived($page.url.searchParams.get('q') || '');
 
 	onMount(() => {
+		// Auth is already initialized by +layout.ts -> +layout.svelte
+		// Redirect to login if not authenticated
+		if (!authStore.isAuthenticated) {
+			goto('/login');
+			return;
+		}
+
 		query = urlQuery;
 		if (query) {
 			search();

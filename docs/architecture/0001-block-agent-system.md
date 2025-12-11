@@ -1,8 +1,10 @@
 # Architecture: Block Agent System
 
-**Version**: 2.0.0 | **Date**: 2025-12-09 | **Status**: Draft
+**Version**: 3.0.0 | **Date**: 2025-12-10 | **Status**: Active
 
 > 로직 무결성과 앱 관리 최적화를 위한 블럭화 + 에이전트 시스템 아키텍처
+>
+> ✅ **Code Isolation System**: 코드 오염 방지 에이전트 통합 - [상세 설계](./0003-code-isolation-agent-system.md)
 
 ---
 
@@ -12,27 +14,29 @@
    - 1.1 목적
    - 1.2 설계 원칙
    - 1.3 아키텍처 개요
-   - **1.4 AI 컨텍스트 최적화** ← NEW
+   - 1.4 AI 컨텍스트 최적화
 2. [블럭 정의](#2-블럭-정의)
    - 2.1 블럭 구조
    - 2.2 도메인별 블럭 맵
    - 2.3 블럭 의존성 그래프
-   - **2.4 Vertical Slicing 패턴** ← NEW
-   - **2.5 블럭 사이즈 가이드** ← NEW
+   - 2.4 Vertical Slicing 패턴
+   - 2.5 블럭 사이즈 가이드
 3. [에이전트 시스템](#3-에이전트-시스템)
    - 3.1 에이전트 계층 구조
    - 3.2 에이전트 인터페이스
    - 3.3 도메인 에이전트 상세
    - 3.4 에이전트-블럭 매핑 테이블
-   - **3.5 Agent Rules 파일** ← NEW
+   - 3.5 Agent Rules 파일
+   - **3.6 Code Isolation 에이전트** ← NEW
 4. [오케스트레이션 패턴](#4-오케스트레이션-패턴)
    - 4.1 채택 패턴
    - 4.2 워크플로우 예시
    - 4.3 병렬 처리 패턴
-   - **4.4 Conductor 워크플로우** ← NEW
+   - 4.4 Conductor 워크플로우
 5. [통신 프로토콜](#5-통신-프로토콜)
 6. [에러 처리 및 복구](#6-에러-처리-및-복구)
 7. [구현 가이드](#7-구현-가이드)
+8. [교훈 및 안티패턴](#8-교훈-및-안티패턴)
 
 ---
 
@@ -331,6 +335,32 @@ interface OutputPort {
 | `search.search` | MeiliSearch 실행 | `ParsedQuery` | `RawResults` |
 | `search.rank` | 결과 랭킹/정렬 | `RawResults` | `RankedResults` |
 
+#### Home Domain
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│                      HOME DOMAIN                             │
+├─────────────────────────────────────────────────────────────┤
+│                                                              │
+│  ┌──────────────┐    ┌──────────────┐    ┌──────────────┐  │
+│  │    rows      │───▶│    cache     │───▶│   response   │  │
+│  │    Block     │    │    Block     │    │    Block     │  │
+│  └──────────────┘    └──────────────┘    └──────────────┘  │
+│         │                   │                   │          │
+│         ▼                   ▼                   ▼          │
+│  • Row 타입별 쿼리     • 캐시 히트/미스    • 응답 조립    │
+│  • Jellyfin 연동       • TTL 관리          • UI 최적화    │
+│  • 진행률 계산         • 무효화 트리거     • 페이지네이션 │
+│                                                              │
+└─────────────────────────────────────────────────────────────┘
+```
+
+| Block ID | 책임 | 입력 | 출력 |
+|----------|------|------|------|
+| `home.rows` | Row 데이터 수집 | `RowRequest` | `RowData[]` |
+| `home.cache` | Row 캐싱 관리 | `RowData[]` | `CachedRows` |
+| `home.response` | 홈 응답 조립 | `CachedRows` | `HomeResponse` |
+
 ### 2.3 블럭 의존성 그래프
 
 ```mermaid
@@ -359,12 +389,19 @@ graph TD
         SS --> SRK[search.rank]
     end
 
+    subgraph Home
+        HR[home.rows] --> HC[home.cache]
+        HC --> HRS[home.response]
+    end
+
     %% Cross-domain dependencies
     AS -.->|인증 필요| CQ
     AS -.->|인증 필요| SR
     AS -.->|인증 필요| SP
+    AS -.->|인증 필요| HR
     CQ -->|콘텐츠 정보| SR
     CTL -->|타임라인| SD
+    CQ -.->|콘텐츠 조회| HR
 ```
 
 ### 2.4 Vertical Slicing 패턴

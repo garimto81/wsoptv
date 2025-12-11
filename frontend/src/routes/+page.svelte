@@ -1,99 +1,117 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
-	import { api } from '$lib/api';
-	import { Card, Spinner } from '$lib/components/ui';
+	import { goto } from '$app/navigation';
+	import { homeApi } from '$lib/api/home';
+	import type { RowData } from '$lib/types/row';
+	import { ContentRow, RowSkeleton } from '$lib/components/home';
+	import { authStore } from '$lib/stores';
 
-	interface Catalog {
-		id: string;
-		name: string;
-		displayTitle: string;
-		description: string | null;
-		thumbnailUrl: string | null;
-	}
-
-	let catalogs = $state<Catalog[]>([]);
+	let rows = $state<RowData[]>([]);
 	let isLoading = $state(true);
 	let error = $state('');
+	let cached = $state(false);
 
 	onMount(async () => {
-		console.log('[v0.1.3] Starting catalog load...');
+		if (!authStore.isAuthenticated) {
+			goto('/login');
+			return;
+		}
+
+		await loadHomeRows();
+	});
+
+	async function loadHomeRows() {
+		isLoading = true;
+		error = '';
+
 		try {
-			// API 응답: { items: [...], total: N } 구조
-			const response = await api.get<{ items: Catalog[]; total: number }>('/catalogs');
-			catalogs = response.items || [];
-			console.log('[v0.1.3] Catalogs loaded:', catalogs.length);
-		} catch (err: any) {
-			console.error('[v0.1.3] Catalog load error:', err);
-			error = err.message || 'Failed to load catalogs';
+			const response = await homeApi.fetchHomeRows(20);
+			rows = response.rows;
+			cached = response.cached;
+		} catch (err: unknown) {
+			error = err instanceof Error ? err.message : 'Failed to load content';
+			console.error('Home API error:', err);
 		} finally {
 			isLoading = false;
 		}
-	});
+	}
 </script>
 
 <svelte:head>
 	<title>WSOPTV - Poker VOD Streaming</title>
 </svelte:head>
 
-<div class="home">
+<div class="home-page">
 	<section class="hero">
-		<h1>WSOPTV</h1>
-		<p>The world's best poker broadcasts in one place</p>
+		<div class="hero-content">
+			<h1>WSOPTV</h1>
+			<p>The world's best poker broadcasts in one place</p>
+		</div>
 	</section>
 
-	<section class="catalogs container">
-		<h2>Catalogs</h2>
-
+	<section class="rows-section">
 		{#if isLoading}
-			<div class="loading">
-				<Spinner size="lg" />
-			</div>
+			<RowSkeleton count={6} />
+			<RowSkeleton count={6} />
+			<RowSkeleton count={6} />
 		{:else if error}
-			<div class="error">{error}</div>
-		{:else}
-			<div class="catalog-grid">
-				{#each catalogs as catalog}
-					<a href="/catalog/{catalog.id}" class="catalog-card">
-						<Card variant="clickable" padding="none">
-							<div class="catalog-image">
-								{#if catalog.thumbnailUrl}
-									<img src={catalog.thumbnailUrl} alt={catalog.displayTitle} />
-								{:else}
-									<div class="catalog-placeholder">
-										<span>{catalog.name}</span>
-									</div>
-								{/if}
-							</div>
-							<div class="catalog-info">
-								<h3>{catalog.displayTitle}</h3>
-								{#if catalog.description}
-									<p>{catalog.description}</p>
-								{/if}
-							</div>
-						</Card>
-					</a>
-				{/each}
+			<div class="error-container">
+				<div class="error">
+					<span class="error-icon">⚠️</span>
+					<p>{error}</p>
+					<button onclick={loadHomeRows}>Try Again</button>
+				</div>
 			</div>
+		{:else if rows.length === 0}
+			<div class="empty">
+				<span class="empty-icon">📺</span>
+				<p>No content available</p>
+				<p class="empty-hint">Check your Jellyfin server connection</p>
+			</div>
+		{:else}
+			{#each rows as row (row.id)}
+				<ContentRow {row} />
+			{/each}
 		{/if}
 	</section>
+
+	{#if cached && !isLoading}
+		<div class="cache-indicator" title="Data loaded from cache">
+			<span>⚡ Cached</span>
+		</div>
+	{/if}
 </div>
 
 <style>
-	.home {
+	.home-page {
+		min-height: 100vh;
 		padding-bottom: var(--spacing-xl);
 	}
 
 	.hero {
-		text-align: center;
+		position: relative;
 		padding: var(--spacing-xl) var(--spacing-md);
-		background: linear-gradient(180deg, rgba(229, 9, 20, 0.1) 0%, transparent 100%);
+		margin-bottom: var(--spacing-xl);
+		background: linear-gradient(
+			180deg,
+			rgba(229, 9, 20, 0.15) 0%,
+			rgba(229, 9, 20, 0.05) 50%,
+			transparent 100%
+		);
+	}
+
+	.hero-content {
+		max-width: 1400px;
+		margin: 0 auto;
+		text-align: center;
 	}
 
 	.hero h1 {
-		font-size: 3rem;
+		font-size: 3.5rem;
 		font-weight: 700;
 		color: var(--color-primary);
 		margin-bottom: var(--spacing-sm);
+		letter-spacing: -0.02em;
 	}
 
 	.hero p {
@@ -101,85 +119,104 @@
 		color: var(--color-text-muted);
 	}
 
-	.catalogs {
-		padding-top: var(--spacing-xl);
+	.rows-section {
+		max-width: 1600px;
+		margin: 0 auto;
 	}
 
-	.catalogs h2 {
-		font-size: 1.5rem;
-		font-weight: 600;
-		margin-bottom: var(--spacing-lg);
-	}
-
-	.loading {
+	.error-container {
 		display: flex;
 		justify-content: center;
 		padding: var(--spacing-xl);
 	}
 
 	.error {
-		padding: var(--spacing-md);
+		text-align: center;
+		padding: var(--spacing-xl);
 		background: rgba(229, 9, 20, 0.1);
 		border: 1px solid var(--color-error);
-		border-radius: var(--radius-md);
-		color: var(--color-error);
+		border-radius: var(--radius-lg);
+		max-width: 400px;
 	}
 
-	.catalog-grid {
-		display: grid;
-		grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-		gap: var(--spacing-lg);
-	}
-
-	.catalog-card {
-		text-decoration: none;
-	}
-
-	.catalog-image {
-		aspect-ratio: 16 / 9;
-		overflow: hidden;
-	}
-
-	.catalog-image img {
-		width: 100%;
-		height: 100%;
-		object-fit: cover;
-	}
-
-	.catalog-placeholder {
-		width: 100%;
-		height: 100%;
-		display: flex;
-		align-items: center;
-		justify-content: center;
-		background: linear-gradient(135deg, var(--color-surface) 0%, var(--color-surface-hover) 100%);
+	.error-icon {
 		font-size: 2rem;
-		font-weight: 700;
+		display: block;
+		margin-bottom: var(--spacing-md);
+	}
+
+	.error p {
+		color: var(--color-error);
+		margin-bottom: var(--spacing-md);
+	}
+
+	.error button {
+		padding: 0.75rem 1.5rem;
+		background: var(--color-primary);
+		border: none;
+		border-radius: var(--radius-md);
+		color: white;
+		cursor: pointer;
+		font-size: 0.875rem;
+		transition: background 0.2s ease;
+	}
+
+	.error button:hover {
+		background: var(--color-primary-hover);
+	}
+
+	.empty {
+		text-align: center;
+		padding: var(--spacing-xl);
 		color: var(--color-text-muted);
 	}
 
-	.catalog-info {
-		padding: var(--spacing-md);
+	.empty-icon {
+		font-size: 3rem;
+		display: block;
+		margin-bottom: var(--spacing-md);
+		opacity: 0.5;
 	}
 
-	.catalog-info h3 {
+	.empty p {
 		font-size: 1.125rem;
-		font-weight: 600;
 		margin-bottom: var(--spacing-xs);
 	}
 
-	.catalog-info p {
+	.empty-hint {
 		font-size: 0.875rem;
+		opacity: 0.7;
+	}
+
+	.cache-indicator {
+		position: fixed;
+		bottom: 16px;
+		right: 16px;
+		padding: 0.5rem 1rem;
+		background: var(--color-surface);
+		border: 1px solid var(--color-border);
+		border-radius: var(--radius-md);
+		font-size: 0.75rem;
 		color: var(--color-text-muted);
+		opacity: 0.6;
+		transition: opacity 0.2s ease;
+	}
+
+	.cache-indicator:hover {
+		opacity: 1;
 	}
 
 	@media (max-width: 768px) {
 		.hero h1 {
-			font-size: 2rem;
+			font-size: 2.5rem;
 		}
 
-		.catalog-grid {
-			grid-template-columns: 1fr;
+		.hero p {
+			font-size: 1rem;
+		}
+
+		.cache-indicator {
+			display: none;
 		}
 	}
 </style>

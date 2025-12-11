@@ -1,10 +1,10 @@
 # LLD: WSOPTV Platform (Master)
 
-**Version**: 3.0.0 | **Date**: 2025-12-09 | **PRD**: [0001-prd-wsoptv-platform.md](../prds/0001-prd-wsoptv-platform.md)
+**Version**: 4.0.0 | **Date**: 2025-12-10 | **PRD**: [0001-prd-wsoptv-platform.md](../prds/0001-prd-wsoptv-platform.md)
 
 > 토큰 최적화된 마스터 문서. 상세 구현은 서브 LLD 참조.
 >
-> ⚠️ **Phase 2 전환 예정**: Jellyfin 하이브리드 아키텍처로 전환 승인됨. [상세 계획](../proposals/0002-jellyfin-migration.md)
+> ✅ **Netflix 스타일 동적 카탈로그 시스템**: 고정 계층 구조 대신 Row 기반 단일 홈페이지. [상세 설계](../architecture/0002-netflix-dynamic-catalog-system.md)
 
 ---
 
@@ -104,36 +104,48 @@ graph LR
 | 스킵 | Netflix 스타일 오버레이 버튼 |
 | 모드 | 전체 / 핸드만 / 하이라이트 (S,A) |
 
-### 3.4 검색 (Search)
+### 3.4 홈페이지 (Netflix 스타일 동적 Row)
+
+| 항목 | 내용 |
+|------|------|
+| 구조 | 단일 홈페이지 + 동적 Row 목록 |
+| Row Types | continue_watching, recently_added, library, trending |
+| 데이터 소스 | Jellyfin Libraries (자동 Row 생성) |
+| 네비게이션 | Home → Watch (2단계) |
+
+### 3.5 검색 (Search)
 
 | 항목 | 내용 |
 |------|------|
 | 엔진 | MeiliSearch |
-| 검색 대상 | title, player, tags, catalog |
-| 필터 | catalog, player, handGrade, year |
-| 패싯 | 카탈로그별, 등급별 카운트 |
+| 검색 대상 | title, player, tags, library |
+| 필터 | library_id, player, handGrade, year |
+| 브라우징 | `/browse?library={id}` 필터 기반 |
 
 ## 4. API 엔드포인트 요약
 
 | 그룹 | 엔드포인트 수 | 인증 | 상세 |
 |------|-------------|------|------|
 | Auth | 5 | 일부 | [0003-lld-api.md#1-auth](./0003-lld-api.md#1-auth) |
-| Catalogs | 2 | ✓ | [0003-lld-api.md#catalogs](./0003-lld-api.md#2-catalogs) |
-| Contents | 4 | ✓ | [0003-lld-api.md#contents](./0003-lld-api.md#3-contents) |
-| Search | 1 | ✓ | [0003-lld-api.md#search](./0003-lld-api.md#4-search) |
-| Stream | 1 | ✓ | [0003-lld-api.md#stream](./0003-lld-api.md#5-stream) |
-| Progress | 2 | ✓ | [0003-lld-api.md#progress](./0003-lld-api.md#6-progress) |
-| Admin | 2 | Admin | [0003-lld-api.md#admin](./0003-lld-api.md#7-admin) |
+| **Home** | 1 | ✓ | [0003-lld-api.md#home](./0003-lld-api.md#2-home) |
+| **Browse** | 1 | ✓ | [0003-lld-api.md#browse](./0003-lld-api.md#3-browse) |
+| Jellyfin | 5 | ✓ | [0003-lld-api.md#jellyfin](./0003-lld-api.md#4-jellyfin) |
+| Search | 1 | ✓ | [0003-lld-api.md#search](./0003-lld-api.md#5-search) |
+| Stream | 1 | ✓ | [0003-lld-api.md#stream](./0003-lld-api.md#6-stream) |
+| Progress | 2 | ✓ | [0003-lld-api.md#progress](./0003-lld-api.md#7-progress) |
+| Admin | 2 | Admin | [0003-lld-api.md#admin](./0003-lld-api.md#8-admin) |
 
 ## 5. 컴포넌트 요약
 
 | 컴포넌트 | 패키지 | 역할 | 상세 |
 |----------|--------|------|------|
+| `HomePage` | home | 동적 Row 목록 홈페이지 | [0004](./0004-lld-components.md#homepage) |
+| `ContentRow` | home | Netflix 스타일 Row | [0004](./0004-lld-components.md#contentrow) |
+| `ContentCard` | ui | 콘텐츠 카드 | [0004](./0004-lld-components.md#contentcard) |
 | `VideoPlayer` | player | HLS 재생 + 핸드 감지 | [0004](./0004-lld-components.md#videoplayer) |
 | `SkipButtons` | player | Netflix 스타일 스킵 | [0004](./0004-lld-components.md#skipbuttons) |
 | `HandTimeline` | player | 타임라인 마커 | [0004](./0004-lld-components.md#handtimeline) |
 | `SearchBar` | search | 자동완성 검색 | [0004](./0004-lld-components.md#searchbar) |
-| `ContentCard` | ui | 콘텐츠 카드 | [0004](./0004-lld-components.md#contentcard) |
 
 ## 6. 주요 플로우
 
@@ -151,7 +163,8 @@ graph LR
 | Category | Codes | HTTP |
 |----------|-------|------|
 | **Auth** | `AUTH_INVALID_CREDENTIALS`, `AUTH_PENDING_APPROVAL`, `AUTH_TOKEN_EXPIRED` | 401, 403 |
-| **Content** | `CONTENT_NOT_FOUND`, `SERIES_NOT_FOUND`, `CATALOG_NOT_FOUND` | 404 |
+| **Content** | `CONTENT_NOT_FOUND`, `LIBRARY_NOT_FOUND` | 404 |
+| **Jellyfin** | `JELLYFIN_ERROR`, `JELLYFIN_CONNECTION_ERROR` | 502, 503 |
 | **Stream** | `STREAM_NOT_READY`, `STREAM_SOURCE_ERROR`, `STREAM_ACCESS_DENIED` | 503, 500, 403 |
 | **Rate Limit** | `RATE_LIMIT_EXCEEDED` | 429 |
 | **Validation** | `VALIDATION_ERROR`, `PROGRESS_VERSION_CONFLICT` | 400, 409 |

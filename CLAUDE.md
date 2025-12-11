@@ -2,7 +2,7 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
-**Version**: 6.2.0 | **Context**: Windows, PowerShell
+**Version**: 7.1.0 | **Context**: Windows, PowerShell
 
 ---
 
@@ -162,16 +162,26 @@ NAS_LOCAL_PATH=//10.10.100.122/docker/GGPNAs
 
 ## API Endpoints
 
+### Active Endpoints (v0.2.0-jellyfin)
+
 | Method | Endpoint | Description |
 |--------|----------|-------------|
 | POST | `/api/v1/auth/login` | JWT 토큰 발급 |
 | POST | `/api/v1/auth/register` | 회원가입 (승인 대기) |
-| GET | `/api/v1/catalogs` | 카탈로그 목록 |
-| GET | `/api/v1/contents/{id}` | 콘텐츠 상세 + 핸드 타임라인 |
+| GET | `/api/v1/jellyfin/contents` | Jellyfin 콘텐츠 목록 |
+| GET | `/api/v1/jellyfin/contents/{id}` | Jellyfin 콘텐츠 상세 |
+| GET | `/api/v1/jellyfin/stream/{id}` | Jellyfin 스트림 URL (HLS/Direct) |
+| GET | `/api/v1/jellyfin/libraries` | Jellyfin 라이브러리 목록 |
+| GET | `/api/v1/jellyfin/search` | Jellyfin 콘텐츠 검색 |
 | GET | `/api/v1/search` | MeiliSearch 통합 검색 |
-| GET | `/api/v1/stream/{id}/playlist.m3u8` | HLS 스트리밍 |
-| GET | `/api/v1/jellyfin/items` | Jellyfin 라이브러리 아이템 |
-| GET | `/api/v1/jellyfin/stream/{id}` | Jellyfin 스트림 URL |
+
+### Deprecated Endpoints (비활성화됨)
+
+| Method | Endpoint | Status |
+|--------|----------|--------|
+| GET | `/api/v1/catalogs` | ❌ 비활성 (Jellyfin libraries 사용) |
+| GET | `/api/v1/contents/{id}` | ❌ 비활성 (Jellyfin contents 사용) |
+| GET | `/api/v1/stream/{id}` | ❌ 비활성 (Jellyfin stream 사용) |
 
 API 문서: `http://localhost:8001/docs`
 
@@ -196,19 +206,41 @@ API 문서: `http://localhost:8001/docs`
 **상세**: `tasks/0002-migration-pokervod-to-wsoptv.md`
 **Agent**: `.claude/agents/migration-domain.md`
 
-### In Progress: Jellyfin 전환 (Phase 6)
+### ✅ Completed: Phase 6 - Jellyfin 단일 아키텍처 전환 (v0.2.4)
 
-Docker Desktop WSL2의 Windows SMB 마운트 제한 해결을 위해 Jellyfin 하이브리드 아키텍처로 전환 중
+Docker Desktop WSL2의 Windows SMB 마운트 제한 해결 완료 (2025-12-10)
 
-- **Jellyfin**: Windows Native 설치 (NAS SMB 직접 액세스)
-- **Docker 서비스**: PostgreSQL, MeiliSearch, Redis, Backend, Frontend (유지)
+**아키텍처**:
+- **Jellyfin**: Windows Native 10.11.4 (NAS SMB 직접 액세스)
+- **Docker 서비스**: PostgreSQL, MeiliSearch, Redis, Backend, Frontend
 
 **구현 완료**:
-- `backend/src/api/v1/jellyfin.py` - Jellyfin API 라우터
-- `backend/src/services/jellyfin.py` - Jellyfin 서비스
-- `frontend/src/lib/api/jellyfin.ts` - 프론트엔드 API 클라이언트
+- ✅ Backend: Jellyfin API 프록시 (`/api/v1/jellyfin/*`) - 347줄, 18개 메서드
+- ✅ Frontend: 단일 Jellyfin 기반 UI (`/`, `/watch/{id}`)
+- ✅ 레거시 API 비활성화 (catalogs, contents, stream)
+- ✅ 중복 라우트 제거 (/browse, /catalog, /series, /jellyfin)
+- ✅ E2E 테스트 스펙 작성 (jellyfin/home.spec.ts, jellyfin/watch.spec.ts)
+- ✅ 타입 체크 통과 (svelte-check 0 errors)
+
+**Frontend Routes (v0.2.4)**:
+```
+/                  → Jellyfin 콘텐츠 목록 (Home)
+/watch/{id}        → Jellyfin 스트리밍 플레이어
+/search            → MeiliSearch 통합 검색
+/login             → 로그인
+/register          → 회원가입
+/history           → 시청 이력
+```
+
+**환경 변수**:
+```env
+JELLYFIN_HOST=http://host.docker.internal:8096  # Backend → Jellyfin (내부)
+JELLYFIN_BROWSER_HOST=http://localhost:8096     # Browser → Jellyfin (외부)
+JELLYFIN_API_KEY=your_jellyfin_api_key
+```
 
 **상세**: `docs/proposals/0002-jellyfin-migration.md`
+**Task**: `tasks/0001-tasks-wsoptv-full-build.md` (Phase 6)
 
 ---
 
