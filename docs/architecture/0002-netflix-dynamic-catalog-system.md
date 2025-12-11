@@ -1,9 +1,14 @@
 # Netflix 스타일 동적 카탈로그 시스템 설계서
 
-**Version**: 1.0.0
-**Date**: 2025-12-10
+**Version**: 2.0.0
+**Date**: 2025-12-11
 **Author**: Claude Code
-**Status**: Approved
+**Status**: Updated (Hybrid Architecture)
+
+> **⚠️ 업데이트**: v2.0.0에서 하이브리드 아키텍처로 전환
+> - 기존: Jellyfin Libraries 기반 Row (5개)
+> - 신규: PostgreSQL catalogs/series 기반 Row (24개) + Jellyfin enrichment
+> - PRD: `docs/prds/0004-prd-hybrid-catalog-system.md`
 
 ---
 
@@ -89,17 +94,23 @@ WSOPTV의 카탈로그 시스템을 Netflix 스타일의 **동적 Row 기반 단
 
 ### 2.2 Row 시스템
 
-#### Row Types
+#### Row Types (하이브리드 아키텍처)
 
-| Row Type | 데이터 소스 | 정렬 기준 | 예시 |
-|----------|------------|----------|------|
-| `continue_watching` | User watch history | Last watched (desc) | "Continue Watching" |
-| `recently_added` | Jellyfin DateCreated | DateCreated (desc) | "Recently Added" |
-| `library` | Jellyfin Library ID | DateCreated (desc) | "WSOP", "HCL", "PAD" |
-| `tag` | Content tags | Popularity/Date | "High Stakes", "All-In" |
-| `player` | Hand players | Appearance count | "Phil Ivey", "Tom Dwan" |
-| `trending` | View count (7d) | Views (desc) | "Trending Now" |
-| `top_rated` | Hand grade S/A | Grade + views | "Top Rated Hands" |
+| Row Type | 데이터 소스 | 정렬 기준 | 예시 | Feature Flag |
+|----------|------------|----------|------|--------------|
+| `continue_watching` | PostgreSQL watch_progress | Last watched (desc) | "Continue Watching" | 공통 |
+| `recently_added` | Jellyfin DateCreated | DateCreated (desc) | "Recently Added" | 공통 |
+| **`series`** | **PostgreSQL series** | **year (desc)** | **"WSOP Europe 2024"** | **USE_HYBRID_CATALOG=true** |
+| `library` | Jellyfin Library ID | DateCreated (desc) | "WSOP", "HCL" | USE_HYBRID_CATALOG=false (레거시) |
+| `tag` | Content tags | Popularity/Date | "High Stakes", "All-In" | 공통 |
+| `player` | Hand players | Appearance count | "Phil Ivey", "Tom Dwan" | 공통 |
+| `trending` | PostgreSQL view_events | Views (desc) | "Trending Now" | 공통 |
+| `top_rated` | Hand grade S/A | Grade + views | "Top Rated Hands" | 공통 |
+
+> **신규 (v2.0)**: `series` 타입 추가 - PostgreSQL `catalogs`/`series` 테이블 기반
+> - WSOP 1개 폴더 → 16개 Series Row로 분리
+> - PAD 1개 폴더 → 2개 Series Row (Season 12, 13)
+> - 총 5개 Library → 24개 Series Row
 
 #### Row Configuration
 

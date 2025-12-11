@@ -2,7 +2,7 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
-**Version**: 7.0.0 | **Context**: Windows, PowerShell
+**Version**: 7.1.0 | **Context**: Windows, PowerShell
 
 ---
 
@@ -206,31 +206,41 @@ API 문서: `http://localhost:8001/docs`
 **상세**: `tasks/0002-migration-pokervod-to-wsoptv.md`
 **Agent**: `.claude/agents/migration-domain.md`
 
-### ✅ Completed: Jellyfin 단일 아키텍처 전환 (v0.2.0)
+### ✅ Completed: Phase 6 - Jellyfin 단일 아키텍처 전환 (v0.2.4)
 
-Docker Desktop WSL2의 Windows SMB 마운트 제한 해결 완료
+Docker Desktop WSL2의 Windows SMB 마운트 제한 해결 완료 (2025-12-10)
 
 **아키텍처**:
 - **Jellyfin**: Windows Native 10.11.4 (NAS SMB 직접 액세스)
 - **Docker 서비스**: PostgreSQL, MeiliSearch, Redis, Backend, Frontend
 
 **구현 완료**:
-- ✅ Backend: Jellyfin API 프록시 (`/api/v1/jellyfin/*`)
+- ✅ Backend: Jellyfin API 프록시 (`/api/v1/jellyfin/*`) - 347줄, 18개 메서드
 - ✅ Frontend: 단일 Jellyfin 기반 UI (`/`, `/watch/{id}`)
 - ✅ 레거시 API 비활성화 (catalogs, contents, stream)
 - ✅ 중복 라우트 제거 (/browse, /catalog, /series, /jellyfin)
+- ✅ E2E 테스트 스펙 작성 (jellyfin/home.spec.ts, jellyfin/watch.spec.ts)
+- ✅ 타입 체크 통과 (svelte-check 0 errors)
 
-**Frontend Routes (v0.2.0)**:
+**Frontend Routes (v0.2.4)**:
 ```
 /                  → Jellyfin 콘텐츠 목록 (Home)
 /watch/{id}        → Jellyfin 스트리밍 플레이어
 /search            → MeiliSearch 통합 검색
 /login             → 로그인
 /register          → 회원가입
+/history           → 시청 이력
+```
+
+**환경 변수**:
+```env
+JELLYFIN_HOST=http://host.docker.internal:8096  # Backend → Jellyfin (내부)
+JELLYFIN_BROWSER_HOST=http://localhost:8096     # Browser → Jellyfin (외부)
+JELLYFIN_API_KEY=your_jellyfin_api_key
 ```
 
 **상세**: `docs/proposals/0002-jellyfin-migration.md`
-**E2E 체크리스트**: `docs/E2E_VERIFICATION_CHECKLIST.md`
+**Task**: `tasks/0001-tasks-wsoptv-full-build.md` (Phase 6)
 
 ---
 

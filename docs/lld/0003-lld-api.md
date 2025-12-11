@@ -1,6 +1,8 @@
 # LLD: API Specification
 
-**Version**: 2.0.0 | **Master**: [0001-lld-wsoptv-platform.md](./0001-lld-wsoptv-platform.md)
+**Version**: 3.0.0 | **Master**: [0001-lld-wsoptv-platform.md](./0001-lld-wsoptv-platform.md)
+
+> ✅ **Netflix 스타일 동적 카탈로그 시스템**: Catalogs/Series API 제거, Home/Browse/Jellyfin API로 대체
 
 ---
 
@@ -211,71 +213,87 @@ Set-Cookie: refresh_token=; HttpOnly; Secure; SameSite=Strict; Path=/api/v1/auth
 
 ---
 
-## 2. Catalogs
+## 2. Home (Netflix 스타일 동적 Row)
 
-### GET /catalogs
+### GET /home
 
-카탈로그 목록 (🔒 인증 필요)
+홈페이지 Row 목록 (🔒 인증 필요)
 
-**Response 200**
-```json
-{
-  "data": {
-    "items": [
-      {
-        "id": "wsop",
-        "name": "WSOP",
-        "displayTitle": "World Series of Poker",
-        "description": "세계 최대 포커 대회",
-        "thumbnailUrl": "/images/catalogs/wsop.jpg",
-        "seriesCount": 15,
-        "contentCount": 450
-      }
-    ],
-    "total": 6
-  }
-}
-```
-
----
-
-### GET /catalogs/{id}
-
-카탈로그 상세 (🔒 인증 필요)
+> Netflix 스타일 동적 Row 기반 홈페이지. Jellyfin Library별 Row 자동 생성.
 
 **Response 200**
 ```json
 {
   "data": {
-    "id": "wsop",
-    "name": "WSOP",
-    "displayTitle": "World Series of Poker",
-    "description": "세계 최대 포커 대회",
-    "thumbnailUrl": "/images/catalogs/wsop.jpg",
-    "series": [
+    "rows": [
       {
-        "id": 1,
-        "title": "WSOP 2024",
-        "year": 2024,
-        "episodeCount": 30,
-        "thumbnailUrl": "/images/series/wsop-2024.jpg"
+        "id": "continue_watching",
+        "type": "continue_watching",
+        "title": "Continue Watching",
+        "items": [
+          {
+            "id": "abc123",
+            "title": "WSOP 2024 Day 1",
+            "thumbnailUrl": "http://jellyfin:8096/Items/abc123/Images/Primary",
+            "duration": 7200,
+            "libraryName": "WSOP",
+            "progress": 45
+          }
+        ],
+        "viewAllUrl": "/history"
+      },
+      {
+        "id": "recently_added",
+        "type": "recently_added",
+        "title": "Recently Added",
+        "items": [...],
+        "viewAllUrl": "/browse?sort=recent"
+      },
+      {
+        "id": "library_def456",
+        "type": "library",
+        "title": "WSOP",
+        "items": [...],
+        "filter": {"libraryId": "def456"},
+        "viewAllUrl": "/browse?library=def456"
+      },
+      {
+        "id": "library_ghi789",
+        "type": "library",
+        "title": "HCL",
+        "items": [...],
+        "filter": {"libraryId": "ghi789"},
+        "viewAllUrl": "/browse?library=ghi789"
       }
     ]
   }
 }
 ```
 
+**Row Types**
+| Type | 설명 | Filter |
+|------|------|--------|
+| `continue_watching` | 사용자 이어보기 | userId |
+| `recently_added` | 최근 추가 | - |
+| `library` | Jellyfin 라이브러리별 | libraryId |
+| `trending` | 인기 콘텐츠 (7일) | - |
+
 ---
 
-## 3. Contents
+## 3. Browse (View All)
 
-### GET /series/{id}
+### GET /browse
 
-시리즈 상세 + 콘텐츠 목록 (🔒 인증 필요)
+필터 기반 콘텐츠 브라우징 (🔒 인증 필요)
 
 **Query Parameters**
 | Param | Type | Default | 설명 |
 |-------|------|---------|------|
+| library | uuid | - | Jellyfin Library ID |
+| tag | string | - | 태그 필터 |
+| player | int | - | 플레이어 ID |
+| grade | string | - | 핸드 등급 (S,A,B,C) |
+| sort | string | recent | recent, popular, title |
 | page | int | 1 | 페이지 |
 | limit | int | 20 | 개수 (max: 100) |
 
@@ -283,30 +301,25 @@ Set-Cookie: refresh_token=; HttpOnly; Secure; SameSite=Strict; Path=/api/v1/auth
 ```json
 {
   "data": {
-    "id": 1,
-    "catalogId": "wsop",
-    "title": "WSOP 2024",
-    "year": 2024,
-    "seasonNum": null,
-    "description": "2024년 WSOP 메인 이벤트",
-    "episodeCount": 30,
-    "thumbnailUrl": "/images/series/wsop-2024.jpg",
-    "contents": {
-      "items": [
-        {
-          "id": 101,
-          "episodeNum": 1,
-          "title": "Day 1A - Opening",
-          "durationSec": 7200,
-          "thumbnailUrl": "/images/contents/101.jpg",
-          "viewCount": 1234,
-          "handsCount": 45
-        }
-      ],
-      "total": 30,
-      "page": 1,
-      "limit": 20,
-      "hasNext": true
+    "items": [
+      {
+        "id": "abc123",
+        "title": "WSOP 2024 Day 1",
+        "thumbnailUrl": "http://jellyfin:8096/Items/abc123/Images/Primary",
+        "duration": 7200,
+        "libraryName": "WSOP",
+        "year": 2024,
+        "handCount": 45,
+        "topGrade": "S"
+      }
+    ],
+    "total": 150,
+    "page": 1,
+    "limit": 20,
+    "hasNext": true,
+    "filters": {
+      "library": {"id": "def456", "name": "WSOP"},
+      "appliedFilters": ["library"]
     }
   }
 }
@@ -314,25 +327,142 @@ Set-Cookie: refresh_token=; HttpOnly; Secure; SameSite=Strict; Path=/api/v1/auth
 
 ---
 
-### GET /contents/{id}
+## 4. Jellyfin
 
-콘텐츠 상세 (🔒 인증 필요)
+### GET /jellyfin/libraries
+
+Jellyfin 라이브러리 목록 (🔒 인증 필요)
+
+**Response 200**
+```json
+{
+  "data": [
+    {
+      "id": "def456-uuid",
+      "name": "WSOP",
+      "collectionType": "movies"
+    },
+    {
+      "id": "ghi789-uuid",
+      "name": "HCL",
+      "collectionType": "movies"
+    }
+  ]
+}
+```
+
+---
+
+### GET /jellyfin/contents
+
+Jellyfin 콘텐츠 목록 (🔒 인증 필요)
+
+**Query Parameters**
+| Param | Type | Default | 설명 |
+|-------|------|---------|------|
+| library | uuid | - | Library ID 필터 |
+| q | string | - | 검색어 |
+| page | int | 1 | 페이지 |
+| limit | int | 20 | 개수 (max: 100) |
 
 **Response 200**
 ```json
 {
   "data": {
-    "id": 101,
-    "title": "WSOP 2024 - Day 1A Opening",
-    "description": "2024 WSOP 메인 이벤트 Day 1A",
+    "items": [
+      {
+        "id": "abc123-uuid",
+        "title": "WSOP 2024 Day 1",
+        "overview": "WSOP 메인 이벤트 Day 1",
+        "durationSec": 7200,
+        "year": 2024,
+        "libraryId": "def456-uuid",
+        "libraryName": "WSOP",
+        "thumbnailUrl": "http://jellyfin:8096/Items/abc123/Images/Primary",
+        "streamUrl": "http://jellyfin:8096/Videos/abc123/stream.mp4?Static=true&api_key=xxx",
+        "directUrl": "http://jellyfin:8096/Videos/abc123/stream?Static=true&api_key=xxx",
+        "createdAt": "2024-12-01T10:00:00Z"
+      }
+    ],
+    "total": 150,
+    "page": 1,
+    "limit": 20,
+    "hasNext": true
+  }
+}
+```
+
+---
+
+### GET /jellyfin/contents/{id}
+
+Jellyfin 콘텐츠 상세 (🔒 인증 필요)
+
+**Response 200**
+```json
+{
+  "data": {
+    "id": "abc123-uuid",
+    "title": "WSOP 2024 Day 1",
+    "overview": "WSOP 메인 이벤트 Day 1",
     "durationSec": 7200,
-    "viewCount": 1234,
-    "thumbnailUrl": "/images/contents/101.jpg",
-    "series": {
-      "id": 1,
-      "title": "WSOP 2024",
-      "catalogId": "wsop"
-    },
+    "year": 2024,
+    "libraryId": "def456-uuid",
+    "libraryName": "WSOP",
+    "thumbnailUrl": "http://jellyfin:8096/Items/abc123/Images/Primary",
+    "streamUrl": "http://jellyfin:8096/Videos/abc123/stream.mp4?Static=true&api_key=xxx",
+    "directUrl": "http://jellyfin:8096/Videos/abc123/stream?Static=true&api_key=xxx"
+  }
+}
+```
+
+---
+
+### GET /jellyfin/stream/{id}
+
+스트림 URL 조회 (🔒 인증 필요)
+
+**Query Parameters**
+| Param | Type | Default | 설명 |
+|-------|------|---------|------|
+| redirect | bool | false | true면 스트림으로 리다이렉트 |
+
+**Response 200**
+```json
+{
+  "data": {
+    "itemId": "abc123",
+    "hlsUrl": "http://jellyfin:8096/Videos/abc123/stream.mp4?Static=true&api_key=xxx",
+    "directUrl": "http://jellyfin:8096/Videos/abc123/stream?Static=true&api_key=xxx",
+    "thumbnailUrl": "http://jellyfin:8096/Items/abc123/Images/Primary"
+  }
+}
+```
+
+---
+
+## 5. Contents (포커 특화)
+
+### GET /contents/{id}
+
+콘텐츠 상세 + 포커 메타데이터 (🔒 인증 필요)
+
+> Jellyfin 콘텐츠에 PostgreSQL의 포커 특화 데이터(핸드, 플레이어)를 결합
+
+**Response 200**
+```json
+{
+  "data": {
+    "id": "abc123-uuid",
+    "title": "WSOP 2024 - Day 1A Opening",
+    "overview": "2024 WSOP 메인 이벤트 Day 1A",
+    "durationSec": 7200,
+    "year": 2024,
+    "libraryId": "def456-uuid",
+    "libraryName": "WSOP",
+    "thumbnailUrl": "http://jellyfin:8096/Items/abc123/Images/Primary",
+    "streamUrl": "http://jellyfin:8096/Videos/abc123/stream.mp4?Static=true&api_key=xxx",
+    "directUrl": "http://jellyfin:8096/Videos/abc123/stream?Static=true&api_key=xxx",
     "players": [
       { "id": 1, "name": "Phil Ivey", "displayName": "Phil Ivey" },
       { "id": 2, "name": "Daniel Negreanu", "displayName": "Daniel Negreanu" }
@@ -340,7 +470,6 @@ Set-Cookie: refresh_token=; HttpOnly; Secure; SameSite=Strict; Path=/api/v1/auth
     "tags": ["main-event", "day-1"],
     "handsCount": 45,
     "handGradeSummary": { "S": 3, "A": 12, "B": 20, "C": 10 },
-    "streamUrl": "/api/v1/stream/101/master.m3u8",
     "watchProgress": {
       "progressSec": 1800,
       "completed": false

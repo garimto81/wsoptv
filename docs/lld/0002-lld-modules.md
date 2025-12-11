@@ -1,6 +1,8 @@
 # LLD: Modules (패키지 상세 설계)
 
-**Version**: 2.0.0 | **Master**: [0001-lld-wsoptv-platform.md](./0001-lld-wsoptv-platform.md)
+**Version**: 3.0.0 | **Master**: [0001-lld-wsoptv-platform.md](./0001-lld-wsoptv-platform.md)
+
+> ✅ **Netflix 스타일 동적 카탈로그 시스템**: Catalog/Series 엔티티 제거, Jellyfin 기반 평면 구조
 
 ---
 
@@ -8,47 +10,74 @@
 
 공유 타입 정의 패키지. 모든 패키지의 기반.
 
-### 1.1 Core Entities
+### 1.1 Core Entities (Jellyfin 기반)
 
 ```typescript
 // packages/types/src/entities.ts
 
-export interface Catalog {
-  id: string;                    // 'wsop', 'hcl', 'pad'
-  name: string;
-  displayTitle: string;
-  description?: string;
-  thumbnailUrl?: string;
+// Jellyfin Library (카탈로그 역할)
+export interface JellyfinLibrary {
+  id: string;                    // Jellyfin UUID
+  name: string;                  // 'WSOP', 'HCL', 'PAD'
+  collectionType?: string;       // 'movies', 'tvshows'
 }
 
-export interface Series {
-  id: number;
-  catalogId: string;
+// Jellyfin Item (콘텐츠)
+export interface JellyfinContent {
+  id: string;                    // Jellyfin Item UUID
   title: string;
-  year: number;
-  seasonNum?: number;
-  episodeCount: number;
-  description?: string;
-  thumbnailUrl?: string;
-}
-
-export interface Content {
-  id: number;
-  seriesId: number;
-  fileId: string;
-  episodeNum?: number;
-  title: string;
-  description?: string;
+  overview?: string;
   durationSec: number;
-  viewCount: number;
-  thumbnailUrl?: string;
+  year?: number;
+  libraryId: string;             // 소속 라이브러리 ID
+  libraryName: string;           // 소속 라이브러리명
+  thumbnailUrl: string;
+  streamUrl: string;
+  directUrl: string;
   createdAt: string;
 }
 
+// Row Item (홈페이지 Row 내 아이템)
+export interface RowItem {
+  id: string;                    // Jellyfin Item ID
+  title: string;
+  thumbnailUrl: string;
+  duration: number;
+  libraryName: string;
+  progress?: number;             // 시청 진행률 (0-100)
+  handCount?: number;
+  topGrade?: HandGrade;
+}
+
+// Row Data (홈페이지 Row)
+export interface RowData {
+  id: string;                    // 'library_abc123'
+  type: RowType;
+  title: string;
+  items: RowItem[];
+  viewAllUrl?: string;
+  filter?: RowFilter;
+}
+
+export type RowType =
+  | 'continue_watching'
+  | 'recently_added'
+  | 'library'
+  | 'trending'
+  | 'tag'
+  | 'player';
+
+export interface RowFilter {
+  libraryId?: string;
+  tags?: string[];
+  playerId?: number;
+  handGrade?: HandGrade[];
+}
+
+// 포커 특화 엔티티 (PostgreSQL)
 export interface Hand {
   id: number;
-  contentId: number;
-  fileId: string;
+  jellyfinItemId: string;        // Jellyfin Item UUID 연결
   handNumber?: number;
   startSec: number;
   endSec: number;
@@ -74,20 +103,6 @@ export interface Player {
   avatarUrl?: string;
   totalHands: number;
   totalWins: number;
-}
-
-export interface File {
-  id: string;
-  nasPath: string;
-  filename: string;
-  sizeBytes: number;
-  durationSec: number;
-  resolution: string;
-  codec: string;
-  fps: number;
-  bitrateKbps: number;
-  hlsReady: boolean;
-  hlsPath?: string;
 }
 ```
 
@@ -180,13 +195,24 @@ export const progressRequestSchema = z.object({
 
 export const searchRequestSchema = z.object({
   q: z.string().min(2).max(200),
-  catalogId: z.string().optional(),
+  libraryId: z.string().uuid().optional(),  // Jellyfin Library UUID
   playerId: z.number().int().positive().optional(),
   handGrade: z.enum(['S', 'A', 'B', 'C']).optional(),
   year: z.number().int().min(1970).max(2030).optional(),
   page: z.number().int().min(1).default(1),
   limit: z.number().int().min(1).max(100).default(20),
   sort: z.enum(['relevance', 'date', 'views']).default('relevance')
+});
+
+// Browse Request (View All)
+export const browseRequestSchema = z.object({
+  library: z.string().uuid().optional(),     // Jellyfin Library UUID
+  tag: z.string().optional(),
+  player: z.number().int().positive().optional(),
+  grade: z.enum(['S', 'A', 'B', 'C']).optional(),
+  sort: z.enum(['recent', 'popular', 'title']).default('recent'),
+  page: z.number().int().min(1).default(1),
+  limit: z.number().int().min(1).max(100).default(20),
 });
 ```
 
