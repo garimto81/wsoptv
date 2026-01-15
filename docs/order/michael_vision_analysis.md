@@ -22,14 +22,24 @@
 
 ### 콘텐츠 분배
 
+연간 약 200개 Bracelet 대회:
 ```
-50개 방송 대회
-├── ESPN: 10개 (20%)
-│   └── 독점 1년 후 WSOP TV 사용 가능
-├── PokerGo: 10개 (20%)
-│   └── 계약 조건에 따라 이후 사용
-└── WSOP 직접: 30개 (60%)
-    └── 즉시 WSOP TV + YouTube 동시 송출
+연간 약 200개 Bracelet 대회
+├── WSOP VEGAS: 약 150개 (5~7월)
+│   ├── ESPN: 10개 (프리미엄)
+│   │   └── 독점 1년 후 WSOP TV 사용 가능
+│   ├── PokerGo: 10개 (High Roller)
+│   │   └── 계약 조건에 따라 이후 사용
+│   └── WSOP 직접: 나머지 (동시 진행으로 일부만 방송 가능)
+│       └── 즉시 WSOP TV + YouTube 동시 송출
+└── 해외: 약 50개 (WSOP 직접 방송)
+    ├── Super Circuit
+    └── WSOP Europe
+
+방송 제약:
+- "50개 방송" = 동시 진행 제약
+- 방송 가능하면 가급적 제공
+- 가치 낮은 이벤트는 비효율적으로 제외
 ```
 
 ### OTT 솔루션 반영 사항
@@ -151,7 +161,7 @@ YouTube (무료)          WSOP TV (유료)
 |------|:----------:|:-----------:|
 | 라이브 시청 | O | O |
 | VOD 시청 | O | O |
-| Timeshift | ? | O |
+| Timeshift | O | O |
 | **Multi-View** | X | **O** |
 | **StatsView** | X | **O** |
 | 4K (향후) | X | O |
@@ -170,7 +180,7 @@ YouTube (무료)          WSOP TV (유료)
 |----------|------|----------|
 | GGPass 로그인 | OAuth2 SSO 연동 | API 클라이언트 |
 | 구독 모델 구현 | 내부 빌링 API 연동 | 결제 연동 |
-| 역대 영상 업로드 | 약 10,000시간+ 추정 | VOD 마이그레이션 |
+| 역대 영상 업로드 | 1973년~현재 (WSOP 전체 역사) | VOD 마이그레이션 |
 | 5개 플랫폼 | Web, iOS, Android, Samsung TV, LG TV | 앱 개발 |
 | WSOP.TV 웹 | 웹 서비스 제공 | 웹앱 개발 |
 | View Mode Switch | Multi-View ↔ StatsView 전환 | UI 개발 |
@@ -178,7 +188,6 @@ YouTube (무료)          WSOP TV (유료)
 
 ### BrightCove vs Vimeo
 - **현재 상태**: 업체 선정 미결정
-- **추가 후보**: Mega Cloud (맑음 소프트) - 기술 검증 미팅 완료
 
 ---
 
@@ -208,26 +217,26 @@ YouTube (무료)          WSOP TV (유료)
 
 ### 기술적 쟁점
 
-| ID | 쟁점 | 선택지 | 권장안 | 결정 주체 |
+| ID | 쟁점 | 선택지 | 권장안 | 제안 주체 |
 |:--:|------|--------|--------|----------|
-| T1 | Advanced Mode 구현 방식 | 클라이언트/서버/하이브리드 믹싱 | 서버 믹싱 | Michael + 개발팀 |
-| T2 | StatsView 데이터 소스 | GTO 실시간/사전계산/수동 입력 | 사전계산 | Michael + GG POKER |
-| T3 | OVP 플랫폼 선정 | BrightCove/Vimeo/Mega Cloud | Mega Cloud | GG POKER |
+| T1 | Advanced Mode 구현 방식 | 클라이언트/서버/하이브리드 믹싱 | 서버 믹싱 | 개발팀 |
+| T2 | StatsView 데이터 소스 | GTO Wizard 솔루션 (GGM$에서 도입) | GTO Wizard | GG POKER |
+| T3 | OVP 플랫폼 선정 | BrightCove/Vimeo | TBD | OVP 업체 |
 
 ### 비즈니스 쟁점
 
-| ID | 쟁점 | 선택지 | 권장안 | 결정 주체 |
+| ID | 쟁점 | 선택지 | 권장안 | 제안 주체 |
 |:--:|------|--------|--------|----------|
-| B1 | $10 vs $50 기능 분리 | 기능/콘텐츠/화질 차별화 | 기능 차별화 | Michael |
-| B2 | ESPN/PokerGo 권리 조건 | - | 법무 검토 | GG POKER 법무팀 |
-| B3 | YouTube 동시 송출 범위 | 30개 전체/일부/없음 | 전체 | Michael |
+| B1 | $10 vs $50 기능 분리 | 기능/콘텐츠/화질 차별화 | 기능 차별화 | GG POKER 비즈니스팀 |
+| B2 | ESPN/PokerGo 권리 조건 | - | 법무 검토 | 법무팀 |
+| B3 | YouTube 동시 송출 범위 | 30개 전체/일부/없음 | 전체 | 프로덕션팀 |
 
 ### 일정 쟁점
 
-| ID | 쟁점 | 선택지 | 권장안 | 결정 주체 |
+| ID | 쟁점 | 선택지 | 권장안 | 제안 주체 |
 |:--:|------|--------|--------|----------|
 | S1 | 마이그레이션 vs 런칭 | 순차/병행 | 병행 진행 | GG POKER PM |
-| S2 | Phase 1 범위 | Advanced Mode 포함 여부 | Multi-View만 포함 | Michael + 개발팀 |
+| S2 | Phase 1 범위 | Advanced Mode 포함 여부 | Multi-View만 포함 | 개발팀 |
 
 ---
 
@@ -240,13 +249,7 @@ YouTube (무료)          WSOP TV (유료)
 2. **StatsView의 "플랍 베팅 확률"이 실시간 GTO 계산인지, 사전 정의된 통계인지?**
 
 3. **"역대 모든 WSOP 영상"의 실제 보유 현황은?**
-   - 몇 년도부터의 아카이브인지
    - 총 몇 시간 분량인지
-
-4. **2026년 3월 1일 마감의 구체적 범위는?**
-   - 앱 이름 변경만?
-   - 스토어 등록 완료?
-   - 계정 마이그레이션 완료?
 
 ---
 
