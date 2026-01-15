@@ -1,0 +1,308 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mega Cloud 미팅 질문 카테고리 분류도</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            min-height: 100vh;
+            padding: 40px;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        .title {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+        .title h1 {
+            font-size: 28px;
+            color: #1a1a2e;
+            margin-bottom: 8px;
+        }
+        .title p {
+            color: #666;
+            font-size: 14px;
+        }
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 24px;
+        }
+        .category {
+            background: white;
+            border-radius: 16px;
+            padding: 24px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+            transition: transform 0.2s;
+        }
+        .category:hover {
+            transform: translateY(-4px);
+        }
+        .category-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 20px;
+            padding-bottom: 16px;
+            border-bottom: 2px solid #f0f0f0;
+        }
+        .category-icon {
+            width: 48px;
+            height: 48px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+        }
+        .category-title {
+            flex: 1;
+        }
+        .category-title h2 {
+            font-size: 18px;
+            color: #1a1a2e;
+            margin-bottom: 4px;
+        }
+        .category-title span {
+            font-size: 13px;
+            color: #888;
+        }
+        .question-count {
+            background: #f0f0f0;
+            padding: 6px 14px;
+            border-radius: 20px;
+            font-size: 13px;
+            font-weight: 600;
+            color: #555;
+        }
+        .questions {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+        .question {
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+            padding: 12px;
+            background: #fafafa;
+            border-radius: 8px;
+        }
+        .question-num {
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            font-weight: 600;
+            color: white;
+            flex-shrink: 0;
+        }
+        .question-text {
+            font-size: 13px;
+            color: #333;
+            line-height: 1.5;
+        }
+
+        /* Category Colors */
+        .player .category-icon { background: #e3f2fd; }
+        .player .question-num { background: #2196f3; }
+        .player .category-header { border-bottom-color: #bbdefb; }
+
+        .ott .category-icon { background: #f3e5f5; }
+        .ott .question-num { background: #9c27b0; }
+        .ott .category-header { border-bottom-color: #e1bee7; }
+
+        .infra .category-icon { background: #e8f5e9; }
+        .infra .question-num { background: #4caf50; }
+        .infra .category-header { border-bottom-color: #c8e6c9; }
+
+        .ops .category-icon { background: #fff3e0; }
+        .ops .question-num { background: #ff9800; }
+        .ops .category-header { border-bottom-color: #ffe0b2; }
+
+        .summary {
+            margin-top: 32px;
+            background: white;
+            border-radius: 16px;
+            padding: 24px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+        }
+        .summary h3 {
+            font-size: 16px;
+            color: #1a1a2e;
+            margin-bottom: 16px;
+        }
+        .summary-stats {
+            display: flex;
+            gap: 24px;
+            justify-content: space-around;
+        }
+        .stat {
+            text-align: center;
+        }
+        .stat-value {
+            font-size: 32px;
+            font-weight: 700;
+            color: #1a1a2e;
+        }
+        .stat-label {
+            font-size: 12px;
+            color: #888;
+            margin-top: 4px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="title">
+            <h1>Mega Cloud 미팅 질문 카테고리 분류도</h1>
+            <p>PRD-0004 | WSOPTV OTT 업체 선정 - 미팅 준비 문서</p>
+        </div>
+
+        <div class="grid">
+            <div class="category player">
+                <div class="category-header">
+                    <div class="category-icon">🎬</div>
+                    <div class="category-title">
+                        <h2>플레이어/SDK</h2>
+                        <span>Player & SDK Technology</span>
+                    </div>
+                    <div class="question-count">4개</div>
+                </div>
+                <div class="questions">
+                    <div class="question">
+                        <div class="question-num">Q1</div>
+                        <div class="question-text">WAVVE 플레이어 기술 스택 (자체 개발 vs OVP 기반)</div>
+                    </div>
+                    <div class="question">
+                        <div class="question-num">Q2</div>
+                        <div class="question-text">멀티뷰 (다중 카메라) 동시 재생 구현 경험</div>
+                    </div>
+                    <div class="question">
+                        <div class="question-num">Q3</div>
+                        <div class="question-text">Quick VOD (Live→VOD 실시간 전환) 기술</div>
+                    </div>
+                    <div class="question">
+                        <div class="question-num">Q4</div>
+                        <div class="question-text">자막/다국어 지원 아키텍처</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="category ott">
+                <div class="category-header">
+                    <div class="category-icon">📱</div>
+                    <div class="category-title">
+                        <h2>OTT/앱</h2>
+                        <span>OTT & App Development</span>
+                    </div>
+                    <div class="question-count">4개</div>
+                </div>
+                <div class="questions">
+                    <div class="question">
+                        <div class="question-num">Q5</div>
+                        <div class="question-text">WAVVE 앱 기술 스택 (Web/iOS/Android/TV)</div>
+                    </div>
+                    <div class="question">
+                        <div class="question-num">Q6</div>
+                        <div class="question-text">TV 앱 개발 범위 (Roku/Fire TV 포함 여부)</div>
+                    </div>
+                    <div class="question">
+                        <div class="question-num">Q7</div>
+                        <div class="question-text">글로벌 서비스 확장 경험 (KOCOWA, wavve go)</div>
+                    </div>
+                    <div class="question">
+                        <div class="question-num">Q8</div>
+                        <div class="question-text">앱 성능 최적화 경험 (4.2M MAU)</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="category infra">
+                <div class="category-header">
+                    <div class="category-icon">☁️</div>
+                    <div class="category-title">
+                        <h2>인프라</h2>
+                        <span>Infrastructure & CDN</span>
+                    </div>
+                    <div class="question-count">3개</div>
+                </div>
+                <div class="questions">
+                    <div class="question">
+                        <div class="question-num">Q9</div>
+                        <div class="question-text">CDN 파트너 및 글로벌 커버리지</div>
+                    </div>
+                    <div class="question">
+                        <div class="question-num">Q10</div>
+                        <div class="question-text">대규모 동시접속 처리 아키텍처</div>
+                    </div>
+                    <div class="question">
+                        <div class="question-num">Q11</div>
+                        <div class="question-text">해외 지역 서비스 인프라 구성 방안</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="category ops">
+                <div class="category-header">
+                    <div class="category-icon">🔗</div>
+                    <div class="category-title">
+                        <h2>연동/운영</h2>
+                        <span>Integration & Operations</span>
+                    </div>
+                    <div class="question-count">3개</div>
+                </div>
+                <div class="questions">
+                    <div class="question">
+                        <div class="question-num">Q12</div>
+                        <div class="question-text">외부 시스템 연동 API (빌링/CMS/SSO)</div>
+                    </div>
+                    <div class="question">
+                        <div class="question-num">Q13</div>
+                        <div class="question-text">WAVVE 운영 중 주요 장애 사례/대응</div>
+                    </div>
+                    <div class="question">
+                        <div class="question-num">Q14</div>
+                        <div class="question-text">글로벌 프로젝트 커뮤니케이션 체계</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="summary">
+            <h3>질문 요약</h3>
+            <div class="summary-stats">
+                <div class="stat">
+                    <div class="stat-value">14</div>
+                    <div class="stat-label">총 질문 수</div>
+                </div>
+                <div class="stat">
+                    <div class="stat-value">4</div>
+                    <div class="stat-label">카테고리</div>
+                </div>
+                <div class="stat">
+                    <div class="stat-value">WAVVE</div>
+                    <div class="stat-label">주요 레퍼런스</div>
+                </div>
+                <div class="stat">
+                    <div class="stat-value">4.2M</div>
+                    <div class="stat-label">MAU 처리 경험</div>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

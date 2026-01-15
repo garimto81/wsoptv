@@ -1,0 +1,488 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WSOPTV - Watch Screen</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #0a0a0a;
+            color: #ffffff;
+            min-height: 100vh;
+        }
+
+        /* Header */
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 16px 40px;
+            background: linear-gradient(180deg, rgba(0,0,0,0.8) 0%, transparent 100%);
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 100;
+        }
+        .logo {
+            font-size: 24px;
+            font-weight: 800;
+            color: #fbbf24;
+            letter-spacing: -1px;
+        }
+        .logo span {
+            color: #ffffff;
+        }
+        .nav {
+            display: flex;
+            gap: 32px;
+        }
+        .nav a {
+            color: #a1a1aa;
+            text-decoration: none;
+            font-size: 14px;
+            font-weight: 500;
+            transition: color 0.2s;
+        }
+        .nav a.active {
+            color: #ffffff;
+        }
+        .user-menu {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+        .user-avatar {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #fbbf24, #f59e0b);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+            font-size: 14px;
+        }
+
+        /* Main Content */
+        .main {
+            padding-top: 70px;
+        }
+
+        /* Hero Live Player */
+        .hero-player {
+            position: relative;
+            width: 100%;
+            height: 60vh;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .player-wrapper {
+            width: 80%;
+            max-width: 1200px;
+            aspect-ratio: 16/9;
+            background: #000;
+            border-radius: 12px;
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+        }
+        .live-badge {
+            position: absolute;
+            top: 16px;
+            left: 16px;
+            background: #ef4444;
+            color: white;
+            padding: 6px 12px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            animation: pulse 2s infinite;
+        }
+        .live-badge::before {
+            content: '';
+            width: 8px;
+            height: 8px;
+            background: white;
+            border-radius: 50%;
+        }
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.8; }
+        }
+        .player-content {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><rect fill="%23111" width="100" height="100"/></svg>');
+        }
+        .play-button {
+            width: 80px;
+            height: 80px;
+            background: rgba(251, 191, 36, 0.9);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+        .play-button:hover {
+            transform: scale(1.1);
+        }
+        .play-icon {
+            width: 0;
+            height: 0;
+            border-top: 18px solid transparent;
+            border-bottom: 18px solid transparent;
+            border-left: 28px solid #0a0a0a;
+            margin-left: 6px;
+        }
+
+        /* Player Controls */
+        .player-controls {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            padding: 20px;
+            background: linear-gradient(transparent, rgba(0,0,0,0.9));
+        }
+        .progress-bar {
+            height: 4px;
+            background: rgba(255,255,255,0.2);
+            border-radius: 2px;
+            margin-bottom: 12px;
+        }
+        .progress-fill {
+            height: 100%;
+            width: 35%;
+            background: #fbbf24;
+            border-radius: 2px;
+        }
+        .controls-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .control-buttons {
+            display: flex;
+            gap: 16px;
+            align-items: center;
+        }
+        .control-btn {
+            background: none;
+            border: none;
+            color: white;
+            cursor: pointer;
+            font-size: 18px;
+            opacity: 0.8;
+            transition: opacity 0.2s;
+        }
+        .control-btn:hover {
+            opacity: 1;
+        }
+        .multiview-btn {
+            background: rgba(255,255,255,0.1);
+            border: 1px solid rgba(255,255,255,0.3);
+            padding: 8px 16px;
+            border-radius: 6px;
+            color: white;
+            font-size: 12px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .multiview-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 8px);
+            gap: 2px;
+        }
+        .multiview-grid span {
+            width: 8px;
+            height: 6px;
+            background: white;
+            border-radius: 1px;
+        }
+
+        /* Event Info */
+        .event-info {
+            padding: 24px 40px;
+            background: #111;
+            border-bottom: 1px solid #222;
+        }
+        .event-meta {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            margin-bottom: 8px;
+        }
+        .event-tag {
+            background: #fbbf24;
+            color: #0a0a0a;
+            padding: 4px 10px;
+            border-radius: 4px;
+            font-size: 11px;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+        .event-date {
+            color: #71717a;
+            font-size: 13px;
+        }
+        .event-title {
+            font-size: 24px;
+            font-weight: 700;
+            margin-bottom: 8px;
+        }
+        .event-description {
+            color: #a1a1aa;
+            font-size: 14px;
+            max-width: 800px;
+        }
+
+        /* Language Selector */
+        .language-bar {
+            display: flex;
+            gap: 12px;
+            padding: 16px 40px;
+            background: #0a0a0a;
+            border-bottom: 1px solid #1a1a1a;
+            overflow-x: auto;
+        }
+        .lang-chip {
+            padding: 8px 16px;
+            background: #1a1a1a;
+            border: 1px solid #333;
+            border-radius: 20px;
+            color: #a1a1aa;
+            font-size: 12px;
+            white-space: nowrap;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .lang-chip.active {
+            background: #fbbf24;
+            border-color: #fbbf24;
+            color: #0a0a0a;
+        }
+        .lang-chip:hover:not(.active) {
+            border-color: #fbbf24;
+            color: #fbbf24;
+        }
+
+        /* Related Content */
+        .related {
+            padding: 40px;
+        }
+        .section-title {
+            font-size: 20px;
+            font-weight: 600;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .section-title::before {
+            content: '';
+            width: 4px;
+            height: 24px;
+            background: #fbbf24;
+            border-radius: 2px;
+        }
+        .video-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 20px;
+        }
+        .video-card {
+            background: #111;
+            border-radius: 12px;
+            overflow: hidden;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+        .video-card:hover {
+            transform: translateY(-4px);
+        }
+        .video-thumb {
+            aspect-ratio: 16/9;
+            background: linear-gradient(135deg, #1a1a2e, #16213e);
+            position: relative;
+        }
+        .video-duration {
+            position: absolute;
+            bottom: 8px;
+            right: 8px;
+            background: rgba(0,0,0,0.8);
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 11px;
+        }
+        .video-info {
+            padding: 12px;
+        }
+        .video-title {
+            font-size: 14px;
+            font-weight: 500;
+            margin-bottom: 4px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        .video-meta {
+            color: #71717a;
+            font-size: 12px;
+        }
+
+        /* Footer */
+        .footer {
+            padding: 40px;
+            background: #050505;
+            border-top: 1px solid #1a1a1a;
+            text-align: center;
+            color: #52525b;
+            font-size: 12px;
+        }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <header class="header">
+        <div class="logo">WSOP<span>TV</span></div>
+        <nav class="nav">
+            <a href="#" class="active">Watch</a>
+            <a href="#">Collections</a>
+        </nav>
+        <div class="user-menu">
+            <div class="user-avatar">JD</div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="main">
+        <!-- Hero Player -->
+        <section class="hero-player">
+            <div class="player-wrapper">
+                <div class="live-badge">LIVE</div>
+                <div class="player-content">
+                    <div class="play-button">
+                        <div class="play-icon"></div>
+                    </div>
+                </div>
+                <div class="player-controls">
+                    <div class="progress-bar">
+                        <div class="progress-fill"></div>
+                    </div>
+                    <div class="controls-row">
+                        <div class="control-buttons">
+                            <button class="control-btn">⏮</button>
+                            <button class="control-btn">⏸</button>
+                            <button class="control-btn">⏭</button>
+                            <span style="color: #71717a; font-size: 12px;">2:34:21 / LIVE</span>
+                        </div>
+                        <div class="control-buttons">
+                            <button class="multiview-btn">
+                                <div class="multiview-grid">
+                                    <span></span><span></span><span></span><span></span>
+                                </div>
+                                Multi-View
+                            </button>
+                            <button class="control-btn">CC</button>
+                            <button class="control-btn">⚙</button>
+                            <button class="control-btn">⛶</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Event Info -->
+        <section class="event-info">
+            <div class="event-meta">
+                <span class="event-tag">Main Event</span>
+                <span class="event-date">Day 4 | January 7, 2026</span>
+            </div>
+            <h1 class="event-title">2026 WSOP Main Event - Day 4 Feature Table</h1>
+            <p class="event-description">Watch the action unfold as the remaining 127 players battle for a spot at the final table. Today's feature table includes three former bracelet winners.</p>
+        </section>
+
+        <!-- Language Selector -->
+        <section class="language-bar">
+            <span class="lang-chip active">English</span>
+            <span class="lang-chip">Español</span>
+            <span class="lang-chip">Português</span>
+            <span class="lang-chip">Deutsch</span>
+            <span class="lang-chip">Français</span>
+            <span class="lang-chip">日本語</span>
+            <span class="lang-chip">한국어</span>
+            <span class="lang-chip">中文</span>
+            <span class="lang-chip">Русский</span>
+            <span class="lang-chip">العربية</span>
+            <span class="lang-chip">+10 more</span>
+        </section>
+
+        <!-- Related Content -->
+        <section class="related">
+            <h2 class="section-title">Quick VOD - Today's Highlights</h2>
+            <div class="video-grid">
+                <div class="video-card">
+                    <div class="video-thumb">
+                        <span class="video-duration">12:34</span>
+                    </div>
+                    <div class="video-info">
+                        <div class="video-title">All-In with Quad Aces!</div>
+                        <div class="video-meta">2 hours ago</div>
+                    </div>
+                </div>
+                <div class="video-card">
+                    <div class="video-thumb">
+                        <span class="video-duration">8:21</span>
+                    </div>
+                    <div class="video-info">
+                        <div class="video-title">Epic River Bluff Call</div>
+                        <div class="video-meta">3 hours ago</div>
+                    </div>
+                </div>
+                <div class="video-card">
+                    <div class="video-thumb">
+                        <span class="video-duration">15:42</span>
+                    </div>
+                    <div class="video-info">
+                        <div class="video-title">Bubble Burst - Final Hand</div>
+                        <div class="video-meta">4 hours ago</div>
+                    </div>
+                </div>
+                <div class="video-card">
+                    <div class="video-thumb">
+                        <span class="video-duration">6:18</span>
+                    </div>
+                    <div class="video-info">
+                        <div class="video-title">Chip Leader Interview</div>
+                        <div class="video-meta">5 hours ago</div>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <p>© 2026 WSOPTV. All rights reserved. | Terms of Service | Privacy Policy</p>
+    </footer>
+</body>
+</html>

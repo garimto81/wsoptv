@@ -1,0 +1,105 @@
+{
+  "version": "1.0.0",
+  "project_name": "WSOPTV",
+  "last_sync": "2026-01-08T12:00:00Z",
+  "next_prd_number": 6,
+  "prds": {
+    "PRD-0001": {
+      "title": "WSOPTV 업체 선정",
+      "slug": "wsoptv-vendor-selection",
+      "status": "In Progress",
+      "priority": "P0",
+      "local_path": "tasks/prds/PRD-0001-wsoptv-vendor-selection.md",
+      "created_at": "2026-01-06",
+      "google_doc_id": null,
+      "google_doc_url": null
+    },
+    "PRD-0002": {
+      "title": "WSOPTV OTT 플랫폼 MVP",
+      "slug": "wsoptv-ott-platform-mvp",
+      "status": "Draft",
+      "priority": "P2",
+      "local_path": "tasks/prds/PRD-0002-wsoptv-ott-platform-mvp.md",
+      "local_cache": "tasks/prds/PRD-0002.cache.md",
+      "checklist_path": "docs/checklists/PRD-0002.md",
+      "mockups_path": "docs/mockups/PRD-0002/",
+      "images_path": "docs/images/PRD-0002/",
+      "created_at": "2026-01-07",
+      "google_doc_id": "1Lh8WoDEoZpbN-7XR3lZFLURjbrqkD1ggmiYYD0zToII",
+      "google_doc_url": "https://docs.google.com/document/d/1Lh8WoDEoZpbN-7XR3lZFLURjbrqkD1ggmiYYD0zToII/edit",
+      "google_drive_images": {
+        "architecture": "https://drive.google.com/file/d/1OtxUtWwNNc3Ph1jlvDEXXJqjcFyMj9GX/view",
+        "watch-screen": "https://drive.google.com/file/d/1SfVqO9EN5cuoP6cWbNt-ZsaTf1FZZlxI/view",
+        "multiview-screen": "https://drive.google.com/file/d/1SBkZxwaNdYsdGRc7xCyE_vzaWgO2444w/view",
+        "collections-screen": "https://drive.google.com/file/d/1BdzMIthMRV_MAEBBZSMBZ0OnjH9zjndc/view"
+      }
+    },
+    "PRD-0003": {
+      "title": "Markdown to Google Docs 변환 도구",
+      "slug": "md-to-gdocs-converter",
+      "status": "Completed",
+      "priority": "P1",
+      "local_path": "tasks/prds/PRD-0003-md-to-gdocs-converter.md",
+      "checklist_path": "docs/checklists/PRD-0003.md",
+      "created_at": "2026-01-07",
+      "google_doc_id": null,
+      "google_doc_url": null,
+      "related_files": [
+        "scripts/md_to_gdocs.py"
+      ],
+      "test_outputs": [
+        {
+          "version": "v5",
+          "url": "https://docs.google.com/document/d/1dgUxLaaSQFeA1077hTN_A4pqVM-VICVFJl9KmOd48Y4/edit",
+          "doc_id": "1dgUxLaaSQFeA1077hTN_A4pqVM-VICVFJl9KmOd48Y4"
+        }
+      ]
+    },
+    "PRD-0004": {
+      "title": "Mega Cloud 미팅 준비 문서",
+      "slug": "megacloud-meeting-prep",
+      "status": "Draft",
+      "priority": "P1",
+      "local_path": "tasks/prds/PRD-0004-megacloud-meeting-prep.md",
+      "checklist_path": "docs/checklists/PRD-0004.md",
+      "mockups_path": "docs/mockups/PRD-0004/",
+      "images_path": "docs/images/PRD-0004/",
+      "created_at": "2026-01-07",
+      "google_doc_id": "1QA2EqY8eLefWitDK-ZQ5_AmyV5xFGySRXiI9w9Amm-k",
+      "google_doc_url": "https://docs.google.com/document/d/1QA2EqY8eLefWitDK-ZQ5_AmyV5xFGySRXiI9w9Amm-k/edit",
+      "google_drive_images": {
+        "question-categories": "https://drive.google.com/file/d/1_OTQ8MqBQV1zLojtX88I-ZZkCabd02pz/view",
+        "evaluation-matrix": "https://drive.google.com/file/d/1tUJPFElD0Y3QDPsZccbQJ5FKnyfYl2Nm/view",
+        "wsoptv-mapping": "https://drive.google.com/file/d/1bC9FRwx-It23BHbPFsescZrwUHk29Thw/view"
+      },
+      "source_document": "docs/meeting_megacloud_questions.md"
+    },
+    "PRD-0005": {
+      "title": "WSOP TV OTT RFP",
+      "slug": "wsoptv-ott-rfp",
+      "status": "Draft",
+      "priority": "P0",
+      "type": "RFP",
+      "local_path": "tasks/prds/PRD-0005-wsoptv-ott-rfp.md",
+      "local_path_en": "tasks/prds/PRD-0005-wsoptv-ott-rfp-en.md",
+      "checklist_path": "docs/checklists/PRD-0005.md",
+      "images_path": "docs/images/PRD-0005/",
+      "created_at": "2026-01-08",
+      "google_doc_id": "1hgwIFGfSxG8rNCT71H7S7LlqZIDTI4LNd-fS5CBCDAA",
+      "google_doc_url": "https://docs.google.com/document/d/1hgwIFGfSxG8rNCT71H7S7LlqZIDTI4LNd-fS5CBCDAA/edit",
+      "google_doc_id_en": "1C-38RKZN07Bx7bs3UsTJfvjsr8doK5zNkdlGBLZj16E",
+      "google_doc_url_en": "https://docs.google.com/document/d/1C-38RKZN07Bx7bs3UsTJfvjsr8doK5zNkdlGBLZj16E/edit",
+      "google_drive_images": {
+        "system-architecture": "https://drive.google.com/file/d/1lr3Mlf4W_SQ-f7NM7jym4mONM-YNE8xY/view",
+        "data-flow": "https://drive.google.com/file/d/1fsXTzk0jeXINkkXEsrdElE6h6rRYLDI1/view",
+        "responsibility-matrix": "https://drive.google.com/file/d/1s6Q20zktl2YaoZYE7NswAsBPJGr_kjXm/view"
+      },
+      "google_drive_images_en": {
+        "system-architecture": "https://drive.google.com/file/d/1Fl0XT3yrjF824tMTKo-IgL7vjjhkQ8t0/view",
+        "data-flow": "https://drive.google.com/file/d/1_mYey5y7nv7O5vD7YV6zRsR5kiRYGTN2/view",
+        "responsibility-matrix": "https://drive.google.com/file/d/1X78M_TyBU32kQCwhkZ861Zz3qSInS_E1/view"
+      },
+      "description": "위탁 운영사 발주용 RFP 문서"
+    }
+  }
+}

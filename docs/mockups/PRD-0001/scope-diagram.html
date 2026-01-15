@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WSOPTV - 업무 분담 다이어그램</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            min-height: 100vh;
+            padding: 40px;
+            color: #fff;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        h1 {
+            text-align: center;
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            background: linear-gradient(90deg, #ffd700, #ff6b6b);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        .subtitle {
+            text-align: center;
+            color: #888;
+            margin-bottom: 40px;
+            font-size: 1.1rem;
+        }
+        .diagram {
+            display: flex;
+            flex-direction: column;
+            gap: 30px;
+        }
+        .section {
+            background: rgba(255,255,255,0.05);
+            border-radius: 20px;
+            padding: 30px;
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+        .section-title {
+            font-size: 1.4rem;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .section-title .icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2rem;
+        }
+        .ggpoker .icon { background: linear-gradient(135deg, #ffd700, #ff9500); }
+        .vendor .icon { background: linear-gradient(135deg, #00d4ff, #0099ff); }
+        .interface .icon { background: linear-gradient(135deg, #ff6b6b, #ff8e53); }
+
+        .items-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 15px;
+        }
+        .item {
+            background: rgba(255,255,255,0.08);
+            border-radius: 12px;
+            padding: 20px;
+            transition: transform 0.3s, box-shadow 0.3s;
+        }
+        .item:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+        }
+        .item h3 {
+            font-size: 1.1rem;
+            margin-bottom: 8px;
+            color: #ffd700;
+        }
+        .item p {
+            font-size: 0.9rem;
+            color: #aaa;
+            line-height: 1.5;
+        }
+        .arrow-section {
+            display: flex;
+            justify-content: center;
+            padding: 20px 0;
+        }
+        .arrow {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 5px;
+        }
+        .arrow-line {
+            width: 4px;
+            height: 60px;
+            background: linear-gradient(180deg, #ffd700, #00d4ff);
+            border-radius: 2px;
+        }
+        .arrow-head {
+            width: 0;
+            height: 0;
+            border-left: 15px solid transparent;
+            border-right: 15px solid transparent;
+            border-top: 20px solid #00d4ff;
+        }
+        .arrow-label {
+            background: rgba(255,255,255,0.1);
+            padding: 8px 20px;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            color: #fff;
+        }
+        .interface-items {
+            display: flex;
+            justify-content: space-around;
+            flex-wrap: wrap;
+            gap: 20px;
+        }
+        .interface-item {
+            background: linear-gradient(135deg, rgba(255,107,107,0.2), rgba(255,142,83,0.2));
+            border: 1px solid rgba(255,107,107,0.3);
+            border-radius: 12px;
+            padding: 15px 25px;
+            text-align: center;
+        }
+        .interface-item h4 {
+            color: #ff8e53;
+            margin-bottom: 5px;
+        }
+        .interface-item p {
+            color: #aaa;
+            font-size: 0.85rem;
+        }
+        .legend {
+            display: flex;
+            justify-content: center;
+            gap: 30px;
+            margin-top: 30px;
+            padding-top: 20px;
+            border-top: 1px solid rgba(255,255,255,0.1);
+        }
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 0.9rem;
+            color: #888;
+        }
+        .legend-dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+        }
+        .legend-dot.gold { background: #ffd700; }
+        .legend-dot.blue { background: #00d4ff; }
+        .legend-dot.orange { background: #ff8e53; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>WSOPTV 업무 분담 구조</h1>
+        <p class="subtitle">GGPoker 내부 vs 위탁 업체 담당 영역</p>
+
+        <div class="diagram">
+            <!-- GGPoker Section -->
+            <div class="section ggpoker">
+                <div class="section-title">
+                    <div class="icon">G</div>
+                    <span>GGPoker 내부 담당</span>
+                </div>
+                <div class="items-grid">
+                    <div class="item">
+                        <h3>디자인 가이드</h3>
+                        <p>UI/UX 디자인 시스템<br>브랜드 가이드라인</p>
+                    </div>
+                    <div class="item">
+                        <h3>글로벌 빌링 시스템</h3>
+                        <p>구독 결제 처리<br>멀티 결제사 연동</p>
+                    </div>
+                    <div class="item">
+                        <h3>스케줄/대회 정보</h3>
+                        <p>토너먼트 일정<br>테이블/선수 데이터</p>
+                    </div>
+                    <div class="item">
+                        <h3>사용자 인증</h3>
+                        <p>GGPass SSO<br>회원 등급 관리</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Arrow -->
+            <div class="arrow-section">
+                <div class="arrow">
+                    <div class="arrow-label">API 연동</div>
+                    <div class="arrow-line"></div>
+                    <div class="arrow-head"></div>
+                </div>
+            </div>
+
+            <!-- Interface Section -->
+            <div class="section interface">
+                <div class="section-title">
+                    <div class="icon">I</div>
+                    <span>연동 인터페이스</span>
+                </div>
+                <div class="interface-items">
+                    <div class="interface-item">
+                        <h4>디자인 API</h4>
+                        <p>테마, 컴포넌트</p>
+                    </div>
+                    <div class="interface-item">
+                        <h4>빌링 API</h4>
+                        <p>구독, 결제</p>
+                    </div>
+                    <div class="interface-item">
+                        <h4>스케줄 API</h4>
+                        <p>일정, 대회</p>
+                    </div>
+                    <div class="interface-item">
+                        <h4>GGPass SSO</h4>
+                        <p>인증, 세션</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Arrow -->
+            <div class="arrow-section">
+                <div class="arrow">
+                    <div class="arrow-line"></div>
+                    <div class="arrow-head"></div>
+                </div>
+            </div>
+
+            <!-- Vendor Section -->
+            <div class="section vendor">
+                <div class="section-title">
+                    <div class="icon">V</div>
+                    <span>위탁 업체 담당</span>
+                </div>
+                <div class="items-grid">
+                    <div class="item">
+                        <h3>비디오 재생 솔루션</h3>
+                        <p>OVP, 플레이어 SDK<br>인코딩/트랜스코딩</p>
+                    </div>
+                    <div class="item">
+                        <h3>멀티플랫폼 앱 개발</h3>
+                        <p>Web, iOS, Android<br>TV 앱 (5개 플랫폼)</p>
+                    </div>
+                    <div class="item">
+                        <h3>CDN/DRM 인프라</h3>
+                        <p>글로벌 콘텐츠 배포<br>저작권 보호</p>
+                    </div>
+                    <div class="item">
+                        <h3>운영 지원</h3>
+                        <p>24/7 모니터링<br>장애 대응</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="legend">
+            <div class="legend-item">
+                <div class="legend-dot gold"></div>
+                <span>GGPoker 내부</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-dot blue"></div>
+                <span>위탁 업체</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-dot orange"></div>
+                <span>연동 포인트</span>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

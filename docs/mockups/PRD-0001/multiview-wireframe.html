@@ -1,0 +1,638 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WSOPTV 멀티뷰 UI 와이어프레임</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #0f0f0f;
+            color: #e0e0e0;
+            min-height: 100vh;
+        }
+
+        /* Header */
+        .header {
+            background: linear-gradient(180deg, #1a1a1a 0%, #0f0f0f 100%);
+            padding: 15px 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid #333;
+        }
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+        .logo-text {
+            font-size: 24px;
+            font-weight: bold;
+            color: #c41e3a;
+        }
+        .logo-sub {
+            font-size: 12px;
+            color: #888;
+        }
+        .nav {
+            display: flex;
+            gap: 30px;
+        }
+        .nav-item {
+            color: #888;
+            font-size: 14px;
+            cursor: pointer;
+            padding: 8px 0;
+            border-bottom: 2px solid transparent;
+        }
+        .nav-item.active {
+            color: #fff;
+            border-bottom-color: #c41e3a;
+        }
+        .user-area {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+        .user-avatar {
+            width: 36px;
+            height: 36px;
+            background: #333;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+        }
+
+        /* Main Content */
+        .main-container {
+            display: flex;
+            height: calc(100vh - 70px);
+        }
+
+        /* Video Area */
+        .video-section {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            padding: 20px;
+        }
+
+        /* Main Video */
+        .main-video {
+            flex: 1;
+            background: linear-gradient(135deg, #1a1a1a 0%, #2a2a2a 100%);
+            border-radius: 12px;
+            position: relative;
+            overflow: hidden;
+            margin-bottom: 15px;
+        }
+        .video-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+        .video-top-bar {
+            display: flex;
+            justify-content: space-between;
+            padding: 15px 20px;
+            background: linear-gradient(180deg, rgba(0,0,0,0.7) 0%, transparent 100%);
+        }
+        .live-badge {
+            background: #c41e3a;
+            color: white;
+            font-size: 11px;
+            font-weight: bold;
+            padding: 4px 10px;
+            border-radius: 4px;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+        .live-badge::before {
+            content: '';
+            width: 6px;
+            height: 6px;
+            background: white;
+            border-radius: 50%;
+            animation: pulse 1s infinite;
+        }
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+        .event-title {
+            text-align: right;
+        }
+        .event-name {
+            font-size: 14px;
+            font-weight: 600;
+        }
+        .event-sub {
+            font-size: 11px;
+            color: #aaa;
+        }
+
+        /* Poker Table Visualization */
+        .poker-table {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 400px;
+            height: 200px;
+            background: radial-gradient(ellipse, #0e5c38 0%, #0a4128 70%, #072e1c 100%);
+            border-radius: 100px;
+            border: 8px solid #4a3728;
+            box-shadow: inset 0 0 30px rgba(0,0,0,0.5);
+        }
+        .board-cards {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            display: flex;
+            gap: 8px;
+        }
+        .card {
+            width: 36px;
+            height: 50px;
+            background: white;
+            border-radius: 4px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+            font-weight: bold;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+        }
+        .card.red { color: #c41e3a; }
+        .card.black { color: #1a1a1a; }
+
+        .player-seat {
+            position: absolute;
+            width: 60px;
+            text-align: center;
+        }
+        .player-avatar {
+            width: 40px;
+            height: 40px;
+            background: #333;
+            border-radius: 50%;
+            margin: 0 auto 5px;
+            border: 2px solid #555;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+        }
+        .player-avatar.active {
+            border-color: #f6ad55;
+            box-shadow: 0 0 10px rgba(246, 173, 85, 0.5);
+        }
+        .player-name {
+            font-size: 10px;
+            color: #ccc;
+            white-space: nowrap;
+        }
+        .player-chips {
+            font-size: 9px;
+            color: #888;
+        }
+
+        /* Player positions around the table */
+        .seat-1 { top: -40px; left: 50%; transform: translateX(-50%); }
+        .seat-2 { top: 10px; right: -50px; }
+        .seat-3 { top: 50%; right: -60px; transform: translateY(-50%); }
+        .seat-4 { bottom: 10px; right: -50px; }
+        .seat-5 { bottom: -40px; left: 50%; transform: translateX(-50%); }
+        .seat-6 { bottom: 10px; left: -50px; }
+        .seat-7 { top: 50%; left: -60px; transform: translateY(-50%); }
+        .seat-8 { top: 10px; left: -50px; }
+        .seat-9 { top: -20px; left: 25%; }
+
+        /* Video Controls */
+        .video-controls {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 15px 20px;
+            background: linear-gradient(0deg, rgba(0,0,0,0.8) 0%, transparent 100%);
+        }
+        .control-group {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+        .control-btn {
+            width: 40px;
+            height: 40px;
+            background: rgba(255,255,255,0.1);
+            border: none;
+            border-radius: 50%;
+            color: white;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+        }
+        .control-btn.play {
+            width: 50px;
+            height: 50px;
+            background: #c41e3a;
+        }
+        .progress-bar {
+            flex: 1;
+            height: 4px;
+            background: rgba(255,255,255,0.2);
+            border-radius: 2px;
+            margin: 0 20px;
+            position: relative;
+        }
+        .progress-fill {
+            width: 35%;
+            height: 100%;
+            background: #c41e3a;
+            border-radius: 2px;
+        }
+        .time-display {
+            font-size: 12px;
+            color: #aaa;
+        }
+
+        /* Multi-View Thumbnails */
+        .multiview-section {
+            display: flex;
+            gap: 10px;
+        }
+        .thumbnail {
+            flex: 1;
+            aspect-ratio: 16/9;
+            background: linear-gradient(135deg, #1a1a1a 0%, #2a2a2a 100%);
+            border-radius: 8px;
+            position: relative;
+            cursor: pointer;
+            border: 2px solid transparent;
+            transition: all 0.2s ease;
+        }
+        .thumbnail:hover {
+            border-color: #c41e3a;
+        }
+        .thumbnail.active {
+            border-color: #f6ad55;
+            box-shadow: 0 0 15px rgba(246, 173, 85, 0.3);
+        }
+        .thumbnail-label {
+            position: absolute;
+            bottom: 5px;
+            left: 5px;
+            font-size: 10px;
+            background: rgba(0,0,0,0.7);
+            padding: 2px 6px;
+            border-radius: 3px;
+        }
+        .thumbnail-content {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 20px;
+        }
+
+        /* Camera Sidebar */
+        .camera-sidebar {
+            width: 280px;
+            background: #1a1a1a;
+            border-left: 1px solid #333;
+            padding: 20px;
+            overflow-y: auto;
+        }
+        .sidebar-title {
+            font-size: 14px;
+            font-weight: 600;
+            margin-bottom: 15px;
+            color: #888;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        .camera-list {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        .camera-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 10px;
+            background: #222;
+            border-radius: 8px;
+            cursor: pointer;
+            border: 1px solid transparent;
+            transition: all 0.2s ease;
+        }
+        .camera-item:hover {
+            border-color: #444;
+        }
+        .camera-item.selected {
+            border-color: #f6ad55;
+            background: #2a2520;
+        }
+        .camera-preview {
+            width: 50px;
+            height: 35px;
+            background: #333;
+            border-radius: 4px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 16px;
+        }
+        .camera-info {
+            flex: 1;
+        }
+        .camera-name {
+            font-size: 13px;
+            margin-bottom: 2px;
+        }
+        .camera-status {
+            font-size: 10px;
+            color: #888;
+        }
+        .camera-select {
+            width: 20px;
+            height: 20px;
+            border: 2px solid #444;
+            border-radius: 4px;
+        }
+        .camera-item.selected .camera-select {
+            background: #f6ad55;
+            border-color: #f6ad55;
+        }
+        .camera-item.selected .camera-select::after {
+            content: '✓';
+            color: #1a1a1a;
+            font-size: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 100%;
+        }
+
+        /* Settings Section */
+        .settings-section {
+            margin-top: 25px;
+            padding-top: 20px;
+            border-top: 1px solid #333;
+        }
+        .setting-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 0;
+        }
+        .setting-label {
+            font-size: 13px;
+        }
+        .setting-value {
+            font-size: 12px;
+            color: #00d4ff;
+            background: #1a2a3a;
+            padding: 4px 10px;
+            border-radius: 4px;
+        }
+
+        /* Footer note */
+        .wireframe-note {
+            position: absolute;
+            bottom: 10px;
+            right: 10px;
+            font-size: 10px;
+            color: #444;
+        }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <div class="header">
+        <div class="logo">
+            <div class="logo-text">WSOP<span style="color: #f6ad55;">TV</span></div>
+            <div class="logo-sub">World Series of Poker</div>
+        </div>
+        <div class="nav">
+            <div class="nav-item active">Watch</div>
+            <div class="nav-item">Collections</div>
+            <div class="nav-item">Schedule</div>
+        </div>
+        <div class="user-area">
+            <div style="font-size: 12px; color: #888;">Premium</div>
+            <div class="user-avatar">👤</div>
+        </div>
+    </div>
+
+    <div class="main-container">
+        <!-- Video Section -->
+        <div class="video-section">
+            <!-- Main Video -->
+            <div class="main-video">
+                <div class="video-overlay">
+                    <div class="video-top-bar">
+                        <div class="live-badge">LIVE</div>
+                        <div class="event-title">
+                            <div class="event-name">WSOP Main Event 2025</div>
+                            <div class="event-sub">Final Table • Day 7</div>
+                        </div>
+                    </div>
+
+                    <!-- Poker Table -->
+                    <div class="poker-table">
+                        <div class="board-cards">
+                            <div class="card red">A♥</div>
+                            <div class="card black">K♠</div>
+                            <div class="card red">Q♦</div>
+                            <div class="card black">J♣</div>
+                            <div class="card red">10♥</div>
+                        </div>
+
+                        <div class="player-seat seat-1">
+                            <div class="player-avatar">P1</div>
+                            <div class="player-name">Smith</div>
+                            <div class="player-chips">$2.4M</div>
+                        </div>
+                        <div class="player-seat seat-2">
+                            <div class="player-avatar active">P2</div>
+                            <div class="player-name">Johnson</div>
+                            <div class="player-chips">$1.8M</div>
+                        </div>
+                        <div class="player-seat seat-3">
+                            <div class="player-avatar">P3</div>
+                            <div class="player-name">Williams</div>
+                            <div class="player-chips">$3.2M</div>
+                        </div>
+                        <div class="player-seat seat-4">
+                            <div class="player-avatar">P4</div>
+                            <div class="player-name">Brown</div>
+                            <div class="player-chips">$950K</div>
+                        </div>
+                        <div class="player-seat seat-5">
+                            <div class="player-avatar">P5</div>
+                            <div class="player-name">Davis</div>
+                            <div class="player-chips">$1.5M</div>
+                        </div>
+                        <div class="player-seat seat-6">
+                            <div class="player-avatar">P6</div>
+                            <div class="player-name">Miller</div>
+                            <div class="player-chips">$2.1M</div>
+                        </div>
+                        <div class="player-seat seat-7">
+                            <div class="player-avatar">P7</div>
+                            <div class="player-name">Wilson</div>
+                            <div class="player-chips">$1.2M</div>
+                        </div>
+                        <div class="player-seat seat-8">
+                            <div class="player-avatar">P8</div>
+                            <div class="player-name">Moore</div>
+                            <div class="player-chips">$800K</div>
+                        </div>
+                        <div class="player-seat seat-9">
+                            <div class="player-avatar">P9</div>
+                            <div class="player-name">Taylor</div>
+                            <div class="player-chips">$1.1M</div>
+                        </div>
+                    </div>
+
+                    <!-- Controls -->
+                    <div class="video-controls">
+                        <div class="control-group">
+                            <button class="control-btn">⏮</button>
+                            <button class="control-btn play">▶</button>
+                            <button class="control-btn">⏭</button>
+                            <button class="control-btn">🔊</button>
+                        </div>
+                        <div class="progress-bar">
+                            <div class="progress-fill"></div>
+                        </div>
+                        <div class="control-group">
+                            <span class="time-display">-30:45 (Delayed)</span>
+                            <button class="control-btn">CC</button>
+                            <button class="control-btn">⚙</button>
+                            <button class="control-btn">⛶</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Multi-View Thumbnails -->
+            <div class="multiview-section">
+                <div class="thumbnail active">
+                    <div class="thumbnail-content">🎬</div>
+                    <span class="thumbnail-label">PGM (Main)</span>
+                </div>
+                <div class="thumbnail">
+                    <div class="thumbnail-content">P2</div>
+                    <span class="thumbnail-label">Johnson</span>
+                </div>
+                <div class="thumbnail">
+                    <div class="thumbnail-content">P3</div>
+                    <span class="thumbnail-label">Williams</span>
+                </div>
+                <div class="thumbnail">
+                    <div class="thumbnail-content">🃏</div>
+                    <span class="thumbnail-label">Board Cam</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Camera Sidebar -->
+        <div class="camera-sidebar">
+            <div class="sidebar-title">Camera Selection</div>
+            <div class="camera-list">
+                <div class="camera-item selected">
+                    <div class="camera-preview">🎬</div>
+                    <div class="camera-info">
+                        <div class="camera-name">PGM (Director)</div>
+                        <div class="camera-status">Main broadcast feed</div>
+                    </div>
+                    <div class="camera-select"></div>
+                </div>
+                <div class="camera-item selected">
+                    <div class="camera-preview">P2</div>
+                    <div class="camera-info">
+                        <div class="camera-name">Johnson Cam</div>
+                        <div class="camera-status">Seat 2 • Chip leader</div>
+                    </div>
+                    <div class="camera-select"></div>
+                </div>
+                <div class="camera-item selected">
+                    <div class="camera-preview">P3</div>
+                    <div class="camera-info">
+                        <div class="camera-name">Williams Cam</div>
+                        <div class="camera-status">Seat 3</div>
+                    </div>
+                    <div class="camera-select"></div>
+                </div>
+                <div class="camera-item selected">
+                    <div class="camera-preview">🃏</div>
+                    <div class="camera-info">
+                        <div class="camera-name">Board Camera</div>
+                        <div class="camera-status">Community cards</div>
+                    </div>
+                    <div class="camera-select"></div>
+                </div>
+                <div class="camera-item">
+                    <div class="camera-preview">P1</div>
+                    <div class="camera-info">
+                        <div class="camera-name">Smith Cam</div>
+                        <div class="camera-status">Seat 1</div>
+                    </div>
+                    <div class="camera-select"></div>
+                </div>
+                <div class="camera-item">
+                    <div class="camera-preview">P4</div>
+                    <div class="camera-info">
+                        <div class="camera-name">Brown Cam</div>
+                        <div class="camera-status">Seat 4</div>
+                    </div>
+                    <div class="camera-select"></div>
+                </div>
+                <div class="camera-item">
+                    <div class="camera-preview">P5</div>
+                    <div class="camera-info">
+                        <div class="camera-name">Davis Cam</div>
+                        <div class="camera-status">Seat 5</div>
+                    </div>
+                    <div class="camera-select"></div>
+                </div>
+            </div>
+
+            <div class="settings-section">
+                <div class="sidebar-title">Settings</div>
+                <div class="setting-item">
+                    <span class="setting-label">Quality</span>
+                    <span class="setting-value">1080p</span>
+                </div>
+                <div class="setting-item">
+                    <span class="setting-label">Subtitles</span>
+                    <span class="setting-value">English</span>
+                </div>
+                <div class="setting-item">
+                    <span class="setting-label">Delay</span>
+                    <span class="setting-value">30 min</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="wireframe-note">WSOPTV Multiview UI Wireframe • PRD-0001</div>
+</body>
+</html>

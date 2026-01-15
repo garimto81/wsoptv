@@ -1,0 +1,356 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WSOPTV 요구사항 매핑</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: #0f0f23;
+            min-height: 100vh;
+            padding: 40px;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        .title {
+            text-align: center;
+            margin-bottom: 40px;
+            color: white;
+        }
+        .title h1 {
+            font-size: 28px;
+            margin-bottom: 8px;
+            background: linear-gradient(135deg, #00d4ff, #7c3aed);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        .title p {
+            color: #888;
+            font-size: 14px;
+        }
+
+        .mapping-container {
+            display: flex;
+            gap: 40px;
+            align-items: flex-start;
+        }
+
+        .column {
+            flex: 1;
+        }
+
+        .column-header {
+            text-align: center;
+            padding: 16px;
+            margin-bottom: 20px;
+            border-radius: 12px;
+            color: white;
+            font-weight: 600;
+            font-size: 15px;
+        }
+        .column-header.wsoptv {
+            background: linear-gradient(135deg, #7c3aed, #5b21b6);
+        }
+        .column-header.questions {
+            background: linear-gradient(135deg, #00d4ff, #0891b2);
+        }
+
+        .requirement {
+            background: rgba(255,255,255,0.05);
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 12px;
+            padding: 16px;
+            margin-bottom: 12px;
+            position: relative;
+        }
+        .requirement::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 0;
+            bottom: 0;
+            width: 4px;
+            border-radius: 12px 0 0 12px;
+        }
+        .requirement.core::before { background: #7c3aed; }
+        .requirement.tech::before { background: #00d4ff; }
+        .requirement.ops::before { background: #10b981; }
+
+        .requirement-title {
+            color: white;
+            font-size: 14px;
+            font-weight: 600;
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .requirement-desc {
+            color: #888;
+            font-size: 12px;
+            line-height: 1.6;
+        }
+        .requirement-tag {
+            font-size: 10px;
+            padding: 3px 8px;
+            border-radius: 20px;
+            font-weight: 500;
+        }
+        .tag-core { background: rgba(124, 58, 237, 0.2); color: #a78bfa; }
+        .tag-tech { background: rgba(0, 212, 255, 0.2); color: #00d4ff; }
+        .tag-ops { background: rgba(16, 185, 129, 0.2); color: #34d399; }
+
+        .question-card {
+            background: rgba(0, 212, 255, 0.05);
+            border: 1px solid rgba(0, 212, 255, 0.2);
+            border-radius: 12px;
+            padding: 12px 16px;
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        .question-num {
+            width: 28px;
+            height: 28px;
+            background: linear-gradient(135deg, #00d4ff, #0891b2);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 11px;
+            font-weight: 600;
+            flex-shrink: 0;
+        }
+        .question-text {
+            color: #ccc;
+            font-size: 12px;
+            line-height: 1.4;
+        }
+
+        .connection-lines {
+            flex-shrink: 0;
+            width: 100px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            padding-top: 60px;
+        }
+        .connection {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+        .connection-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #7c3aed;
+        }
+        .connection-line {
+            flex: 1;
+            height: 2px;
+            background: linear-gradient(90deg, #7c3aed, #00d4ff);
+        }
+        .connection-arrow {
+            width: 0;
+            height: 0;
+            border-left: 6px solid #00d4ff;
+            border-top: 4px solid transparent;
+            border-bottom: 4px solid transparent;
+        }
+
+        .mapping-legend {
+            margin-top: 40px;
+            display: flex;
+            gap: 32px;
+            justify-content: center;
+        }
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            color: #888;
+            font-size: 12px;
+        }
+        .legend-line {
+            width: 40px;
+            height: 3px;
+            border-radius: 2px;
+        }
+        .legend-line.multi { background: linear-gradient(90deg, #7c3aed, #00d4ff); }
+        .legend-line.single { background: #10b981; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="title">
+            <h1>WSOPTV 요구사항 ↔ 미팅 질문 매핑</h1>
+            <p>PRD-0004 | 14개 질문이 WSOPTV 핵심 요구사항을 어떻게 검증하는지</p>
+        </div>
+
+        <div class="mapping-container">
+            <div class="column">
+                <div class="column-header wsoptv">WSOPTV 핵심 요구사항</div>
+
+                <div class="requirement core">
+                    <div class="requirement-title">
+                        <span>멀티뷰 동시 재생</span>
+                        <span class="requirement-tag tag-core">Core</span>
+                    </div>
+                    <div class="requirement-desc">
+                        메인 테이블 + 개별 플레이어 카메라 동시 표시<br>
+                        스트림 동기화, 대역폭 최적화 필수
+                    </div>
+                </div>
+
+                <div class="requirement core">
+                    <div class="requirement-title">
+                        <span>Quick VOD</span>
+                        <span class="requirement-tag tag-core">Core</span>
+                    </div>
+                    <div class="requirement-desc">
+                        라이브 중 되감기/빨리감기 지원<br>
+                        실시간 세그먼트 저장 기술 필요
+                    </div>
+                </div>
+
+                <div class="requirement tech">
+                    <div class="requirement-title">
+                        <span>글로벌 TV 앱</span>
+                        <span class="requirement-tag tag-tech">Tech</span>
+                    </div>
+                    <div class="requirement-desc">
+                        Samsung, LG, Roku, Fire TV 지원<br>
+                        북미/유럽/아시아 전역 서비스
+                    </div>
+                </div>
+
+                <div class="requirement tech">
+                    <div class="requirement-title">
+                        <span>50만 동시접속</span>
+                        <span class="requirement-tag tag-tech">Tech</span>
+                    </div>
+                    <div class="requirement-desc">
+                        WSOP Main Event 기간 목표<br>
+                        오토스케일링, 로드밸런싱 필수
+                    </div>
+                </div>
+
+                <div class="requirement ops">
+                    <div class="requirement-title">
+                        <span>GGPoker 연동</span>
+                        <span class="requirement-tag tag-ops">Ops</span>
+                    </div>
+                    <div class="requirement-desc">
+                        빌링, 스케줄, GGPass SSO 통합<br>
+                        RESTful API, 웹훅 연동
+                    </div>
+                </div>
+
+                <div class="requirement ops">
+                    <div class="requirement-title">
+                        <span>다국어 지원</span>
+                        <span class="requirement-tag tag-ops">Ops</span>
+                    </div>
+                    <div class="requirement-desc">
+                        20개 언어 자막 (GG POKER 기준)<br>
+                        실시간 자막 생성 옵션
+                    </div>
+                </div>
+            </div>
+
+            <div class="connection-lines">
+                <svg width="100" height="500" style="overflow: visible;">
+                    <!-- 멀티뷰 -> Q2 -->
+                    <path d="M0 30 Q50 30 100 45" stroke="url(#gradient1)" stroke-width="2" fill="none"/>
+                    <!-- Quick VOD -> Q3 -->
+                    <path d="M0 95 Q50 95 100 85" stroke="url(#gradient1)" stroke-width="2" fill="none"/>
+                    <!-- TV 앱 -> Q5, Q6 -->
+                    <path d="M0 160 Q50 160 100 125" stroke="url(#gradient1)" stroke-width="2" fill="none"/>
+                    <path d="M0 160 Q50 175 100 165" stroke="url(#gradient1)" stroke-width="2" fill="none"/>
+                    <!-- 동시접속 -> Q8, Q10 -->
+                    <path d="M0 230 Q50 230 100 245" stroke="url(#gradient1)" stroke-width="2" fill="none"/>
+                    <path d="M0 230 Q50 260 100 285" stroke="url(#gradient1)" stroke-width="2" fill="none"/>
+                    <!-- GGPoker -> Q12 -->
+                    <path d="M0 300 Q50 330 100 365" stroke="url(#gradient1)" stroke-width="2" fill="none"/>
+                    <!-- 다국어 -> Q4 -->
+                    <path d="M0 370 Q30 300 100 120" stroke="url(#gradient1)" stroke-width="2" fill="none"/>
+
+                    <defs>
+                        <linearGradient id="gradient1" x1="0%" y1="0%" x2="100%" y2="0%">
+                            <stop offset="0%" stop-color="#7c3aed"/>
+                            <stop offset="100%" stop-color="#00d4ff"/>
+                        </linearGradient>
+                    </defs>
+                </svg>
+            </div>
+
+            <div class="column">
+                <div class="column-header questions">미팅 질문 (14개)</div>
+
+                <div class="question-card">
+                    <div class="question-num">Q2</div>
+                    <div class="question-text">멀티뷰 동시 재생 구현 경험</div>
+                </div>
+                <div class="question-card">
+                    <div class="question-num">Q3</div>
+                    <div class="question-text">Quick VOD 기술 세부사항</div>
+                </div>
+                <div class="question-card">
+                    <div class="question-num">Q4</div>
+                    <div class="question-text">자막/다국어 지원 아키텍처</div>
+                </div>
+                <div class="question-card">
+                    <div class="question-num">Q5</div>
+                    <div class="question-text">WAVVE 앱 기술 스택</div>
+                </div>
+                <div class="question-card">
+                    <div class="question-num">Q6</div>
+                    <div class="question-text">TV 앱 개발 범위 (Roku/Fire TV)</div>
+                </div>
+                <div class="question-card">
+                    <div class="question-num">Q8</div>
+                    <div class="question-text">앱 성능 최적화 (4.2M MAU)</div>
+                </div>
+                <div class="question-card">
+                    <div class="question-num">Q10</div>
+                    <div class="question-text">대규모 동시접속 아키텍처</div>
+                </div>
+                <div class="question-card">
+                    <div class="question-num">Q12</div>
+                    <div class="question-text">외부 시스템 연동 API</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="mapping-legend">
+            <div class="legend-item">
+                <div class="legend-line multi"></div>
+                <span>요구사항 ↔ 질문 매핑</span>
+            </div>
+            <div class="legend-item">
+                <span class="requirement-tag tag-core">Core</span>
+                <span>핵심 기능</span>
+            </div>
+            <div class="legend-item">
+                <span class="requirement-tag tag-tech">Tech</span>
+                <span>기술 요구</span>
+            </div>
+            <div class="legend-item">
+                <span class="requirement-tag tag-ops">Ops</span>
+                <span>운영 연동</span>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

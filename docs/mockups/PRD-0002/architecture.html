@@ -1,0 +1,404 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WSOPTV OTT Platform Architecture</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #0f172a;
+            color: #e2e8f0;
+            padding: 40px;
+            min-height: 100vh;
+        }
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+        h1 {
+            text-align: center;
+            font-size: 28px;
+            margin-bottom: 10px;
+            color: #f8fafc;
+        }
+        .subtitle {
+            text-align: center;
+            color: #94a3b8;
+            margin-bottom: 40px;
+            font-size: 14px;
+        }
+
+        /* Layer styles */
+        .layer {
+            margin-bottom: 30px;
+            position: relative;
+        }
+        .layer-title {
+            position: absolute;
+            left: -120px;
+            top: 50%;
+            transform: translateY(-50%) rotate(-90deg);
+            font-size: 12px;
+            color: #64748b;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            width: 100px;
+            text-align: center;
+        }
+        .layer-content {
+            display: flex;
+            gap: 20px;
+            justify-content: center;
+            flex-wrap: wrap;
+            padding: 20px;
+            background: rgba(30, 41, 59, 0.5);
+            border-radius: 12px;
+            border: 1px solid #334155;
+            margin-left: 0;
+        }
+
+        /* Box styles */
+        .box {
+            padding: 16px 24px;
+            border-radius: 8px;
+            text-align: center;
+            min-width: 140px;
+            position: relative;
+        }
+        .box-title {
+            font-weight: 600;
+            font-size: 14px;
+            margin-bottom: 4px;
+        }
+        .box-desc {
+            font-size: 11px;
+            opacity: 0.7;
+        }
+
+        /* Platform colors */
+        .platform-web { background: linear-gradient(135deg, #3b82f6, #2563eb); }
+        .platform-ios { background: linear-gradient(135deg, #8b5cf6, #7c3aed); }
+        .platform-android { background: linear-gradient(135deg, #22c55e, #16a34a); }
+        .platform-tv { background: linear-gradient(135deg, #f59e0b, #d97706); }
+
+        /* Feature colors */
+        .feature { background: linear-gradient(135deg, #06b6d4, #0891b2); }
+
+        /* Service colors */
+        .service-cdn { background: linear-gradient(135deg, #ec4899, #db2777); }
+        .service-drm { background: linear-gradient(135deg, #f43f5e, #e11d48); }
+        .service-auth { background: linear-gradient(135deg, #14b8a6, #0d9488); }
+        .service-billing { background: linear-gradient(135deg, #a855f7, #9333ea); }
+
+        /* Infra colors */
+        .infra { background: linear-gradient(135deg, #64748b, #475569); }
+
+        /* Connection lines */
+        .connections {
+            display: flex;
+            justify-content: center;
+            margin: -10px 0;
+            position: relative;
+            z-index: 1;
+        }
+        .arrow-down {
+            width: 2px;
+            height: 30px;
+            background: #475569;
+            position: relative;
+        }
+        .arrow-down::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            border-left: 6px solid transparent;
+            border-right: 6px solid transparent;
+            border-top: 8px solid #475569;
+        }
+
+        /* Grid for platforms */
+        .platforms-grid {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 15px;
+        }
+
+        /* Features row */
+        .features-row {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 15px;
+        }
+
+        /* Services row */
+        .services-row {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 15px;
+        }
+
+        /* Infra row */
+        .infra-row {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+        }
+
+        /* Section label */
+        .section-label {
+            text-align: center;
+            font-size: 11px;
+            color: #94a3b8;
+            margin-bottom: 10px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        /* Legend */
+        .legend {
+            display: flex;
+            justify-content: center;
+            gap: 30px;
+            margin-top: 30px;
+            padding: 15px;
+            background: rgba(30, 41, 59, 0.3);
+            border-radius: 8px;
+        }
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 12px;
+            color: #94a3b8;
+        }
+        .legend-color {
+            width: 16px;
+            height: 16px;
+            border-radius: 4px;
+        }
+
+        /* Specs table */
+        .specs {
+            margin-top: 40px;
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 20px;
+        }
+        .spec-card {
+            background: rgba(30, 41, 59, 0.5);
+            border: 1px solid #334155;
+            border-radius: 8px;
+            padding: 20px;
+        }
+        .spec-title {
+            font-size: 14px;
+            font-weight: 600;
+            color: #f8fafc;
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .spec-icon {
+            font-size: 18px;
+        }
+        .spec-list {
+            list-style: none;
+        }
+        .spec-list li {
+            font-size: 12px;
+            color: #94a3b8;
+            padding: 4px 0;
+            border-bottom: 1px solid #1e293b;
+        }
+        .spec-list li:last-child {
+            border-bottom: none;
+        }
+        .spec-value {
+            color: #22c55e;
+            font-weight: 500;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>WSOPTV OTT Platform Architecture</h1>
+        <p class="subtitle">5 Platforms | Multi-DRM | 50K Concurrent Users | 20 Languages</p>
+
+        <!-- Client Layer -->
+        <div class="layer">
+            <div class="section-label">Client Platforms</div>
+            <div class="layer-content">
+                <div class="platforms-grid" style="width: 100%;">
+                    <div class="box platform-web">
+                        <div class="box-title">Web</div>
+                        <div class="box-desc">React + hls.js</div>
+                    </div>
+                    <div class="box platform-ios">
+                        <div class="box-title">iOS</div>
+                        <div class="box-desc">Swift + AVPlayer</div>
+                    </div>
+                    <div class="box platform-android">
+                        <div class="box-title">Android</div>
+                        <div class="box-desc">Kotlin + ExoPlayer</div>
+                    </div>
+                    <div class="box platform-tv">
+                        <div class="box-title">Samsung TV</div>
+                        <div class="box-desc">Tizen Web App</div>
+                    </div>
+                    <div class="box platform-tv">
+                        <div class="box-title">LG TV</div>
+                        <div class="box-desc">webOS Web App</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="connections">
+            <div class="arrow-down"></div>
+        </div>
+
+        <!-- Features Layer -->
+        <div class="layer">
+            <div class="section-label">Core Features</div>
+            <div class="layer-content">
+                <div class="features-row" style="width: 100%;">
+                    <div class="box feature">
+                        <div class="box-title">Live Streaming</div>
+                        <div class="box-desc">1080p HLS</div>
+                    </div>
+                    <div class="box feature">
+                        <div class="box-title">VOD + Quick VOD</div>
+                        <div class="box-desc">Instant Replay</div>
+                    </div>
+                    <div class="box feature">
+                        <div class="box-title">Multi-View</div>
+                        <div class="box-desc">4-Split (Web/Mobile)</div>
+                    </div>
+                    <div class="box feature">
+                        <div class="box-title">Subtitles</div>
+                        <div class="box-desc">20 Languages</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="connections">
+            <div class="arrow-down"></div>
+        </div>
+
+        <!-- Services Layer -->
+        <div class="layer">
+            <div class="section-label">Backend Services</div>
+            <div class="layer-content">
+                <div class="services-row" style="width: 100%;">
+                    <div class="box service-cdn">
+                        <div class="box-title">CDN</div>
+                        <div class="box-desc">Akamai / CloudFront</div>
+                    </div>
+                    <div class="box service-drm">
+                        <div class="box-title">Multi-DRM</div>
+                        <div class="box-desc">Widevine / FairPlay / PlayReady</div>
+                    </div>
+                    <div class="box service-auth">
+                        <div class="box-title">GGPass SSO</div>
+                        <div class="box-desc">Internal Auth</div>
+                    </div>
+                    <div class="box service-billing">
+                        <div class="box-title">Billing API</div>
+                        <div class="box-desc">Payment Team</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="connections">
+            <div class="arrow-down"></div>
+        </div>
+
+        <!-- Infrastructure Layer -->
+        <div class="layer">
+            <div class="section-label">Infrastructure</div>
+            <div class="layer-content">
+                <div class="infra-row" style="width: 100%;">
+                    <div class="box infra">
+                        <div class="box-title">Cloud Hosting</div>
+                        <div class="box-desc">AWS / GCP</div>
+                    </div>
+                    <div class="box infra">
+                        <div class="box-title">Transcoding</div>
+                        <div class="box-desc">HLS Segmentation</div>
+                    </div>
+                    <div class="box infra">
+                        <div class="box-title">Storage</div>
+                        <div class="box-desc">VOD Archive</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Legend -->
+        <div class="legend">
+            <div class="legend-item">
+                <div class="legend-color platform-web"></div>
+                <span>Web Platform</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-color platform-ios"></div>
+                <span>Mobile Apps</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-color platform-tv"></div>
+                <span>TV Apps</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-color feature"></div>
+                <span>Features</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-color service-cdn"></div>
+                <span>External Services</span>
+            </div>
+        </div>
+
+        <!-- Specs -->
+        <div class="specs">
+            <div class="spec-card">
+                <div class="spec-title"><span class="spec-icon">🎬</span> Video Specs</div>
+                <ul class="spec-list">
+                    <li>Resolution: <span class="spec-value">1080p (Full HD)</span></li>
+                    <li>Protocol: <span class="spec-value">HLS</span></li>
+                    <li>Latency: <span class="spec-value">30min ~ 1hr (Intentional)</span></li>
+                    <li>4K Support: <span class="spec-value" style="color: #f59e0b;">Phase 2</span></li>
+                </ul>
+            </div>
+            <div class="spec-card">
+                <div class="spec-title"><span class="spec-icon">🔐</span> Security</div>
+                <ul class="spec-list">
+                    <li>DRM: <span class="spec-value">Widevine L1/L3</span></li>
+                    <li>Apple: <span class="spec-value">FairPlay</span></li>
+                    <li>Microsoft: <span class="spec-value">PlayReady</span></li>
+                    <li>VPN Detection: <span class="spec-value">80-90%</span></li>
+                </ul>
+            </div>
+            <div class="spec-card">
+                <div class="spec-title"><span class="spec-icon">📊</span> Scale</div>
+                <ul class="spec-list">
+                    <li>Concurrent: <span class="spec-value">500K Users</span></li>
+                    <li>CDN Partner: <span class="spec-value">Akamai</span></li>
+                    <li>Languages: <span class="spec-value">20</span></li>
+                    <li>Platforms: <span class="spec-value">5</span></li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

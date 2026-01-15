@@ -1,0 +1,341 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WSOPTV - 업체 평가 매트릭스</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #0f0f23 0%, #1a1a3e 100%);
+            min-height: 100vh;
+            padding: 40px;
+            color: #fff;
+        }
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+        h1 {
+            text-align: center;
+            font-size: 2.2rem;
+            margin-bottom: 10px;
+            color: #fff;
+        }
+        .subtitle {
+            text-align: center;
+            color: #888;
+            margin-bottom: 40px;
+        }
+        .matrix-card {
+            background: rgba(255,255,255,0.03);
+            border-radius: 20px;
+            padding: 30px;
+            border: 1px solid rgba(255,255,255,0.1);
+            margin-bottom: 30px;
+        }
+        .criteria-row {
+            display: flex;
+            align-items: center;
+            padding: 20px 0;
+            border-bottom: 1px solid rgba(255,255,255,0.05);
+        }
+        .criteria-row:last-child {
+            border-bottom: none;
+        }
+        .criteria-info {
+            flex: 1;
+            min-width: 200px;
+        }
+        .criteria-name {
+            font-size: 1.1rem;
+            font-weight: 600;
+            margin-bottom: 5px;
+        }
+        .criteria-desc {
+            font-size: 0.85rem;
+            color: #888;
+        }
+        .weight-bar {
+            width: 200px;
+            margin: 0 30px;
+        }
+        .weight-label {
+            font-size: 0.9rem;
+            color: #ffd700;
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+        .bar-bg {
+            height: 12px;
+            background: rgba(255,255,255,0.1);
+            border-radius: 6px;
+            overflow: hidden;
+        }
+        .bar-fill {
+            height: 100%;
+            border-radius: 6px;
+            transition: width 0.5s ease;
+        }
+        .bar-30 { width: 100%; background: linear-gradient(90deg, #ff6b6b, #ff8e53); }
+        .bar-25 { width: 83%; background: linear-gradient(90deg, #ffd700, #ff9500); }
+        .bar-15 { width: 50%; background: linear-gradient(90deg, #00d4ff, #0099ff); }
+        .bar-5 { width: 17%; background: linear-gradient(90deg, #a855f7, #6366f1); }
+
+        .score-inputs {
+            display: flex;
+            gap: 20px;
+        }
+        .score-box {
+            text-align: center;
+            min-width: 100px;
+        }
+        .score-label {
+            font-size: 0.8rem;
+            color: #888;
+            margin-bottom: 8px;
+        }
+        .score-value {
+            width: 80px;
+            height: 50px;
+            background: rgba(255,255,255,0.05);
+            border: 2px solid rgba(255,255,255,0.2);
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.4rem;
+            font-weight: 600;
+        }
+        .brightcove .score-value {
+            border-color: rgba(255,107,107,0.5);
+            color: #ff6b6b;
+        }
+        .megacloud .score-value {
+            border-color: rgba(0,212,255,0.5);
+            color: #00d4ff;
+        }
+
+        .total-section {
+            background: linear-gradient(135deg, rgba(255,215,0,0.1), rgba(255,107,107,0.1));
+            border: 2px solid rgba(255,215,0,0.3);
+            border-radius: 20px;
+            padding: 30px;
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+        }
+        .total-item {
+            text-align: center;
+        }
+        .total-label {
+            font-size: 1rem;
+            color: #888;
+            margin-bottom: 10px;
+        }
+        .total-score {
+            font-size: 3rem;
+            font-weight: 700;
+        }
+        .total-score.brightcove { color: #ff6b6b; }
+        .total-score.megacloud { color: #00d4ff; }
+        .total-max {
+            font-size: 1.2rem;
+            color: #666;
+        }
+
+        .formula {
+            background: rgba(0,0,0,0.3);
+            border-radius: 10px;
+            padding: 20px;
+            margin-top: 20px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9rem;
+            color: #aaa;
+            text-align: center;
+        }
+        .formula code {
+            color: #ffd700;
+        }
+
+        .legend {
+            display: flex;
+            justify-content: center;
+            gap: 40px;
+            margin-top: 30px;
+        }
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .legend-color {
+            width: 20px;
+            height: 20px;
+            border-radius: 5px;
+        }
+        .legend-color.bc { background: linear-gradient(135deg, #ff6b6b, #ff8e53); }
+        .legend-color.mc { background: linear-gradient(135deg, #00d4ff, #0099ff); }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>업체 평가 매트릭스</h1>
+        <p class="subtitle">5개 핵심 항목 가중치 기반 평가</p>
+
+        <div class="matrix-card">
+            <!-- Row 1: Video Player -->
+            <div class="criteria-row">
+                <div class="criteria-info">
+                    <div class="criteria-name">1. 비디오 플레이어 역량</div>
+                    <div class="criteria-desc">멀티뷰/PLP, 커스텀 SDK, 자막/챕터</div>
+                </div>
+                <div class="weight-bar">
+                    <div class="weight-label">30%</div>
+                    <div class="bar-bg">
+                        <div class="bar-fill bar-30"></div>
+                    </div>
+                </div>
+                <div class="score-inputs">
+                    <div class="score-box brightcove">
+                        <div class="score-label">Brightcove</div>
+                        <div class="score-value">_/5</div>
+                    </div>
+                    <div class="score-box megacloud">
+                        <div class="score-label">Mega Cloud</div>
+                        <div class="score-value">_/5</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Row 2: Multi-platform -->
+            <div class="criteria-row">
+                <div class="criteria-info">
+                    <div class="criteria-name">2. 멀티플랫폼 앱 구축</div>
+                    <div class="criteria-desc">Web, iOS, Android, TV (5개 플랫폼)</div>
+                </div>
+                <div class="weight-bar">
+                    <div class="weight-label">25%</div>
+                    <div class="bar-bg">
+                        <div class="bar-fill bar-25"></div>
+                    </div>
+                </div>
+                <div class="score-inputs">
+                    <div class="score-box brightcove">
+                        <div class="score-label">Brightcove</div>
+                        <div class="score-value">_/5</div>
+                    </div>
+                    <div class="score-box megacloud">
+                        <div class="score-label">Mega Cloud</div>
+                        <div class="score-value">_/5</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Row 3: Global Infra -->
+            <div class="criteria-row">
+                <div class="criteria-info">
+                    <div class="criteria-name">3. 글로벌 인프라</div>
+                    <div class="criteria-desc">CDN 커버리지, Multi-DRM, Geo-blocking</div>
+                </div>
+                <div class="weight-bar">
+                    <div class="weight-label">25%</div>
+                    <div class="bar-bg">
+                        <div class="bar-fill bar-25"></div>
+                    </div>
+                </div>
+                <div class="score-inputs">
+                    <div class="score-box brightcove">
+                        <div class="score-label">Brightcove</div>
+                        <div class="score-value">_/5</div>
+                    </div>
+                    <div class="score-box megacloud">
+                        <div class="score-label">Mega Cloud</div>
+                        <div class="score-value">_/5</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Row 4: Scalability -->
+            <div class="criteria-row">
+                <div class="criteria-info">
+                    <div class="criteria-name">4. 확장성/안정성</div>
+                    <div class="criteria-desc">50만 동시접속, SLA, 장애 대응</div>
+                </div>
+                <div class="weight-bar">
+                    <div class="weight-label">15%</div>
+                    <div class="bar-bg">
+                        <div class="bar-fill bar-15"></div>
+                    </div>
+                </div>
+                <div class="score-inputs">
+                    <div class="score-box brightcove">
+                        <div class="score-label">Brightcove</div>
+                        <div class="score-value">_/5</div>
+                    </div>
+                    <div class="score-box megacloud">
+                        <div class="score-label">Mega Cloud</div>
+                        <div class="score-value">_/5</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Row 5: API Integration -->
+            <div class="criteria-row">
+                <div class="criteria-info">
+                    <div class="criteria-name">5. API 연동 유연성</div>
+                    <div class="criteria-desc">외부 빌링/CMS/SSO 연동</div>
+                </div>
+                <div class="weight-bar">
+                    <div class="weight-label">5%</div>
+                    <div class="bar-bg">
+                        <div class="bar-fill bar-5"></div>
+                    </div>
+                </div>
+                <div class="score-inputs">
+                    <div class="score-box brightcove">
+                        <div class="score-label">Brightcove</div>
+                        <div class="score-value">_/5</div>
+                    </div>
+                    <div class="score-box megacloud">
+                        <div class="score-label">Mega Cloud</div>
+                        <div class="score-value">_/5</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Total Section -->
+        <div class="total-section">
+            <div class="total-item">
+                <div class="total-label">Brightcove 총점</div>
+                <div class="total-score brightcove">_._ <span class="total-max">/ 5.0</span></div>
+            </div>
+            <div class="total-item">
+                <div class="total-label">Mega Cloud 총점</div>
+                <div class="total-score megacloud">_._ <span class="total-max">/ 5.0</span></div>
+            </div>
+        </div>
+
+        <div class="formula">
+            <code>총점 = (플레이어 × 0.30) + (앱 × 0.25) + (인프라 × 0.25) + (안정성 × 0.15) + (연동 × 0.05)</code>
+        </div>
+
+        <div class="legend">
+            <div class="legend-item">
+                <div class="legend-color bc"></div>
+                <span>Brightcove</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-color mc"></div>
+                <span>Mega Cloud</span>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

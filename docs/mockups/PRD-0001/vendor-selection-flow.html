@@ -1,0 +1,448 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WSOPTV 업체 선정 프로세스</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            min-height: 100vh;
+            padding: 40px;
+            color: #e0e0e0;
+        }
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+        h1 {
+            text-align: center;
+            color: #00d4ff;
+            font-size: 28px;
+            margin-bottom: 10px;
+        }
+        .subtitle {
+            text-align: center;
+            color: #888;
+            font-size: 14px;
+            margin-bottom: 40px;
+        }
+
+        /* Flow diagram */
+        .flow-container {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 60px;
+            padding: 0 20px;
+        }
+        .flow-step {
+            flex: 1;
+            text-align: center;
+            position: relative;
+        }
+        .flow-box {
+            background: linear-gradient(180deg, #2d3748 0%, #1a202c 100%);
+            border: 2px solid #4a5568;
+            border-radius: 12px;
+            padding: 20px 15px;
+            margin: 0 10px;
+            transition: all 0.3s ease;
+        }
+        .flow-box.active {
+            border-color: #00d4ff;
+            box-shadow: 0 0 20px rgba(0, 212, 255, 0.3);
+        }
+        .flow-box.completed {
+            border-color: #48bb78;
+            background: linear-gradient(180deg, #234e52 0%, #1a202c 100%);
+        }
+        .step-number {
+            width: 32px;
+            height: 32px;
+            background: #4a5568;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 10px;
+            font-weight: bold;
+            font-size: 14px;
+        }
+        .flow-box.active .step-number {
+            background: #00d4ff;
+            color: #1a1a2e;
+        }
+        .flow-box.completed .step-number {
+            background: #48bb78;
+            color: #1a1a2e;
+        }
+        .flow-title {
+            font-size: 14px;
+            font-weight: 600;
+            margin-bottom: 5px;
+        }
+        .flow-date {
+            font-size: 11px;
+            color: #718096;
+        }
+        .flow-arrow {
+            color: #4a5568;
+            font-size: 24px;
+            flex-shrink: 0;
+        }
+
+        /* Vendor cards */
+        .vendor-section {
+            margin-bottom: 50px;
+        }
+        .section-title {
+            font-size: 18px;
+            color: #00d4ff;
+            margin-bottom: 20px;
+            padding-left: 15px;
+            border-left: 3px solid #00d4ff;
+        }
+        .vendor-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 25px;
+        }
+        .vendor-card {
+            background: linear-gradient(180deg, #2d3748 0%, #1a202c 100%);
+            border: 2px solid #4a5568;
+            border-radius: 16px;
+            padding: 25px;
+            position: relative;
+            overflow: hidden;
+        }
+        .vendor-card.recommended {
+            border-color: #f6ad55;
+        }
+        .vendor-card.recommended::before {
+            content: 'Meeting Done';
+            position: absolute;
+            top: 15px;
+            right: -35px;
+            background: #48bb78;
+            color: #1a1a2e;
+            font-size: 10px;
+            font-weight: bold;
+            padding: 3px 40px;
+            transform: rotate(45deg);
+        }
+        .vendor-logo {
+            font-size: 24px;
+            font-weight: bold;
+            margin-bottom: 15px;
+        }
+        .vendor-card:nth-child(1) .vendor-logo { color: #63b3ed; }
+        .vendor-card:nth-child(2) .vendor-logo { color: #f6ad55; }
+        .vendor-card:nth-child(3) .vendor-logo { color: #b794f4; }
+
+        .vendor-info {
+            font-size: 12px;
+            color: #a0aec0;
+            margin-bottom: 15px;
+        }
+        .score-bar {
+            margin-bottom: 10px;
+        }
+        .score-label {
+            display: flex;
+            justify-content: space-between;
+            font-size: 11px;
+            margin-bottom: 4px;
+        }
+        .score-track {
+            height: 6px;
+            background: #2d3748;
+            border-radius: 3px;
+            overflow: hidden;
+        }
+        .score-fill {
+            height: 100%;
+            border-radius: 3px;
+            transition: width 0.5s ease;
+        }
+        .score-fill.high { background: #48bb78; }
+        .score-fill.medium { background: #f6ad55; }
+        .score-fill.low { background: #fc8181; }
+
+        .total-score {
+            text-align: center;
+            margin-top: 20px;
+            padding-top: 15px;
+            border-top: 1px solid #4a5568;
+        }
+        .score-value {
+            font-size: 28px;
+            font-weight: bold;
+        }
+        .score-max {
+            font-size: 14px;
+            color: #718096;
+        }
+        .vendor-status {
+            text-align: center;
+            margin-top: 10px;
+            font-size: 11px;
+            padding: 5px 10px;
+            border-radius: 20px;
+            display: inline-block;
+        }
+        .status-done {
+            background: rgba(72, 187, 120, 0.2);
+            color: #48bb78;
+        }
+        .status-pending {
+            background: rgba(160, 174, 192, 0.2);
+            color: #a0aec0;
+        }
+
+        /* MVP Specs */
+        .mvp-section {
+            background: linear-gradient(180deg, #2d3748 0%, #1a202c 100%);
+            border-radius: 16px;
+            padding: 30px;
+            margin-bottom: 40px;
+        }
+        .mvp-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 20px;
+        }
+        .mvp-item {
+            background: #1a202c;
+            border-radius: 10px;
+            padding: 20px;
+            text-align: center;
+        }
+        .mvp-icon {
+            font-size: 32px;
+            margin-bottom: 10px;
+        }
+        .mvp-label {
+            font-size: 12px;
+            color: #718096;
+            margin-bottom: 5px;
+        }
+        .mvp-value {
+            font-size: 16px;
+            font-weight: 600;
+            color: #00d4ff;
+        }
+
+        /* Footer */
+        .footer {
+            text-align: center;
+            color: #4a5568;
+            font-size: 11px;
+            margin-top: 30px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>WSOPTV OTT 솔루션 업체 선정</h1>
+        <p class="subtitle">PRD-0001 | 기술 검증 미팅 진행 현황</p>
+
+        <!-- Process Flow -->
+        <div class="flow-container">
+            <div class="flow-step">
+                <div class="flow-box completed">
+                    <div class="step-number">1</div>
+                    <div class="flow-title">기술 미팅</div>
+                    <div class="flow-date">진행 중</div>
+                </div>
+            </div>
+            <div class="flow-arrow">→</div>
+            <div class="flow-step">
+                <div class="flow-box">
+                    <div class="step-number">2</div>
+                    <div class="flow-title">서면 질의</div>
+                    <div class="flow-date">D+3</div>
+                </div>
+            </div>
+            <div class="flow-arrow">→</div>
+            <div class="flow-step">
+                <div class="flow-box">
+                    <div class="step-number">3</div>
+                    <div class="flow-title">PoC 검증</div>
+                    <div class="flow-date">D+14</div>
+                </div>
+            </div>
+            <div class="flow-arrow">→</div>
+            <div class="flow-step">
+                <div class="flow-box">
+                    <div class="step-number">4</div>
+                    <div class="flow-title">견적 비교</div>
+                    <div class="flow-date">D+21</div>
+                </div>
+            </div>
+            <div class="flow-arrow">→</div>
+            <div class="flow-step">
+                <div class="flow-box">
+                    <div class="step-number">5</div>
+                    <div class="flow-title">업체 선정</div>
+                    <div class="flow-date">D+28</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- MVP Specs -->
+        <div class="mvp-section">
+            <h3 class="section-title">확정된 MVP 스펙</h3>
+            <div class="mvp-grid">
+                <div class="mvp-item">
+                    <div class="mvp-icon">📺</div>
+                    <div class="mvp-label">플랫폼</div>
+                    <div class="mvp-value">5개 (Web/iOS/Android/TV)</div>
+                </div>
+                <div class="mvp-item">
+                    <div class="mvp-icon">🎬</div>
+                    <div class="mvp-label">화질</div>
+                    <div class="mvp-value">1080p Full HD</div>
+                </div>
+                <div class="mvp-item">
+                    <div class="mvp-icon">⏱️</div>
+                    <div class="mvp-label">지연 시간</div>
+                    <div class="mvp-value">30분~1시간 (의도적)</div>
+                </div>
+                <div class="mvp-item">
+                    <div class="mvp-icon">📷</div>
+                    <div class="mvp-label">멀티뷰</div>
+                    <div class="mvp-value">4분할 (Web/Mobile)</div>
+                </div>
+                <div class="mvp-item">
+                    <div class="mvp-icon">🌐</div>
+                    <div class="mvp-label">자막</div>
+                    <div class="mvp-value">20개국 언어</div>
+                </div>
+                <div class="mvp-item">
+                    <div class="mvp-icon">🎥</div>
+                    <div class="mvp-label">카메라</div>
+                    <div class="mvp-value">9-10대/테이블</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Vendor Cards -->
+        <div class="vendor-section">
+            <h3 class="section-title">업체별 평가 현황</h3>
+            <div class="vendor-grid">
+                <!-- Brightcove -->
+                <div class="vendor-card">
+                    <div class="vendor-logo">Brightcove</div>
+                    <div class="vendor-info">글로벌 1위 엔터프라이즈 비디오 플랫폼 (NASDAQ: BCOV)</div>
+
+                    <div class="score-bar">
+                        <div class="score-label"><span>플레이어 역량</span><span>-/5</span></div>
+                        <div class="score-track"><div class="score-fill medium" style="width: 0%"></div></div>
+                    </div>
+                    <div class="score-bar">
+                        <div class="score-label"><span>앱 구축</span><span>-/5</span></div>
+                        <div class="score-track"><div class="score-fill medium" style="width: 0%"></div></div>
+                    </div>
+                    <div class="score-bar">
+                        <div class="score-label"><span>글로벌 인프라</span><span>-/5</span></div>
+                        <div class="score-track"><div class="score-fill high" style="width: 0%"></div></div>
+                    </div>
+                    <div class="score-bar">
+                        <div class="score-label"><span>확장성</span><span>-/5</span></div>
+                        <div class="score-track"><div class="score-fill high" style="width: 0%"></div></div>
+                    </div>
+                    <div class="score-bar">
+                        <div class="score-label"><span>API 연동</span><span>-/5</span></div>
+                        <div class="score-track"><div class="score-fill medium" style="width: 0%"></div></div>
+                    </div>
+
+                    <div class="total-score">
+                        <span class="score-value" style="color: #718096;">-</span>
+                        <span class="score-max">/25</span>
+                    </div>
+                    <div style="text-align: center;">
+                        <span class="vendor-status status-pending">미팅 대기</span>
+                    </div>
+                </div>
+
+                <!-- 맑음 소프트 -->
+                <div class="vendor-card recommended">
+                    <div class="vendor-logo">맑음 소프트</div>
+                    <div class="vendor-info">위캔디오 | KOCOWA 구축 경험 | 미킨디오 솔루션</div>
+
+                    <div class="score-bar">
+                        <div class="score-label"><span>플레이어 역량</span><span>4/5</span></div>
+                        <div class="score-track"><div class="score-fill high" style="width: 80%"></div></div>
+                    </div>
+                    <div class="score-bar">
+                        <div class="score-label"><span>앱 구축</span><span>3/5</span></div>
+                        <div class="score-track"><div class="score-fill medium" style="width: 60%"></div></div>
+                    </div>
+                    <div class="score-bar">
+                        <div class="score-label"><span>글로벌 인프라</span><span>4/5</span></div>
+                        <div class="score-track"><div class="score-fill high" style="width: 80%"></div></div>
+                    </div>
+                    <div class="score-bar">
+                        <div class="score-label"><span>확장성</span><span>4/5</span></div>
+                        <div class="score-track"><div class="score-fill high" style="width: 80%"></div></div>
+                    </div>
+                    <div class="score-bar">
+                        <div class="score-label"><span>API 연동</span><span>4/5</span></div>
+                        <div class="score-track"><div class="score-fill high" style="width: 80%"></div></div>
+                    </div>
+
+                    <div class="total-score">
+                        <span class="score-value" style="color: #f6ad55;">19</span>
+                        <span class="score-max">/25</span>
+                    </div>
+                    <div style="text-align: center;">
+                        <span class="vendor-status status-done">미팅 완료</span>
+                    </div>
+                </div>
+
+                <!-- Vimeo OTT -->
+                <div class="vendor-card">
+                    <div class="vendor-logo">Vimeo OTT</div>
+                    <div class="vendor-info">Vimeo Streaming | 2025.11 Bending Spoons 인수</div>
+
+                    <div class="score-bar">
+                        <div class="score-label"><span>플레이어 역량</span><span>-/5</span></div>
+                        <div class="score-track"><div class="score-fill medium" style="width: 0%"></div></div>
+                    </div>
+                    <div class="score-bar">
+                        <div class="score-label"><span>앱 구축</span><span>-/5</span></div>
+                        <div class="score-track"><div class="score-fill medium" style="width: 0%"></div></div>
+                    </div>
+                    <div class="score-bar">
+                        <div class="score-label"><span>글로벌 인프라</span><span>-/5</span></div>
+                        <div class="score-track"><div class="score-fill high" style="width: 0%"></div></div>
+                    </div>
+                    <div class="score-bar">
+                        <div class="score-label"><span>확장성</span><span>-/5</span></div>
+                        <div class="score-track"><div class="score-fill medium" style="width: 0%"></div></div>
+                    </div>
+                    <div class="score-bar">
+                        <div class="score-label"><span>API 연동</span><span>-/5</span></div>
+                        <div class="score-track"><div class="score-fill medium" style="width: 0%"></div></div>
+                    </div>
+
+                    <div class="total-score">
+                        <span class="score-value" style="color: #718096;">-</span>
+                        <span class="score-max">/25</span>
+                    </div>
+                    <div style="text-align: center;">
+                        <span class="vendor-status status-pending">미팅 대기</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="footer">
+            PRD-0001 WSOPTV OTT 솔루션 업체 선정 가이드 | Version 2.0 | 2025-01-07
+        </div>
+    </div>
+</body>
+</html>
